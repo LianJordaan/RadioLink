@@ -133,9 +133,16 @@ async function connectRadio() {
     commandCharacteristic = await service.getCharacteristic(COMMAND_UUID);
     responseCharacteristic = await service.getCharacteristic(RESPONSE_UUID);
     elements.deviceName.textContent = device.name || "RadioLink radio";
+    const codeMatch = (device.name || "").match(/^Radio-([a-z0-9]{8})$/i);
+    if (codeMatch) elements.radioCode.value = codeMatch[1].toLowerCase();
     setConnected(true);
-    elements.radioCode.focus();
-    showMessage("Radio found. Enter its eight-character code to unlock setup.", "working");
+    if (codeMatch) {
+      elements.unlockButton.focus();
+      showMessage(`Radio found. Code ${codeMatch[1].toLowerCase()} was filled from its Bluetooth name; tap Unlock.`, "working");
+    } else {
+      elements.radioCode.focus();
+      showMessage("Radio found. Enter its eight-character code to unlock setup.", "working");
+    }
   } catch (error) {
     if (error.name === "NotAllowedError" || /permission.*block/i.test(error.message)) {
       await showDiagnostics(error);

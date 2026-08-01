@@ -28,9 +28,9 @@ without internet access later.
 ## Using it
 
 1. Switch Bluetooth on and open the published page.
-2. Select **Choose radio** and pick the nearby `RadioLink-XXXX` device.
-3. Enter the radio's eight-character code. This is the same code used as its
-   fallback hotspot password.
+2. Select **Choose radio** and pick the nearby `Radio-XXXXXXXX` device.
+3. The page fills the eight-character code from that Bluetooth name automatically.
+   The same code is also the fallback-hotspot password.
 4. Scan for Wi-Fi, enter the password, and select **Save and connect**.
 
 The password is sent directly from the browser to the radio over BLE. It is not

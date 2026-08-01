@@ -1,4 +1,4 @@
-const CACHE_NAME = "radiolink-v3";
+const CACHE_NAME = "radiolink-v4";
 const ASSETS = ["./", "./index.html", "./styles.css", "./app.js", "./manifest.webmanifest"];
 
 self.addEventListener("install", event => {
