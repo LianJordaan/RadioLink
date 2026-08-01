@@ -29,7 +29,7 @@ without internet access later.
 
 1. Switch Bluetooth on and open the published page.
 2. Select **Choose radio** and pick the nearby `Radio-XXXXXXXX` device.
-3. The page fills the eight-character code from that Bluetooth name automatically.
+3. For short codes, the page fills the code from the Bluetooth name automatically.
 4. Scan for Wi-Fi, enter the password, and select **Save and connect**.
 
 The password is sent directly from the browser to the radio over BLE. It is not
@@ -43,8 +43,9 @@ the character ID and stream URL, but cannot add positions, remove positions, or 
 the wiring map. Blank IDs represent unused dial positions. Non-empty IDs must be
 unique, including uppercase/lowercase differences.
 
-The nested **Super advanced settings** section controls the eight-character access
-code. It is separate from the fallback hotspot.
+The nested **Super advanced settings** section controls the variable-length Bluetooth
+access code. It accepts 1–256 lowercase letters or numbers and is separate from the
+fallback hotspot. Saving it fully reloads the page, requiring a fresh radio selection.
 
 **Reset character IDs** restores `SFM`, `OFM`, `RSG`, `ALGUA`, and `LEK` on the
 first five positions and clears the remaining five IDs while preserving the first

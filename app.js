@@ -171,7 +171,7 @@ async function connectRadio() {
     commandCharacteristic = await service.getCharacteristic(COMMAND_UUID);
     responseCharacteristic = await service.getCharacteristic(RESPONSE_UUID);
     elements.deviceName.textContent = device.name || "RadioLink radio";
-    const codeMatch = (device.name || "").match(/^Radio-([a-z0-9]{8})$/i);
+    const codeMatch = (device.name || "").match(/^Radio-([a-z0-9]{1,20})$/i);
     if (codeMatch) elements.radioCode.value = codeMatch[1].toLowerCase();
     setConnected(true);
     if (codeMatch) {
@@ -179,7 +179,7 @@ async function connectRadio() {
       showMessage(`Radio found. Code ${codeMatch[1].toLowerCase()} was filled from its Bluetooth name; tap Unlock.`, "working");
     } else {
       elements.radioCode.focus();
-      showMessage("Radio found. Enter its eight-character code to unlock setup.", "working");
+      showMessage("Radio found. Enter its Bluetooth access code to unlock setup.", "working");
     }
   } catch (error) {
     if (error.name === "NotAllowedError" || /permission.*block/i.test(error.message)) {
@@ -248,8 +248,8 @@ function renderStatus(status) {
 
 async function unlockRadio() {
   const code = elements.radioCode.value.trim().toLowerCase();
-  if (!/^[a-z0-9]{8}$/.test(code)) {
-    showMessage("Enter the radio’s eight-character lowercase code.", "error");
+  if (!/^[a-z0-9]{1,256}$/.test(code)) {
+    showMessage("Enter the radio’s access code using lowercase letters and numbers.", "error");
     return;
   }
   setupToken = code;
@@ -495,20 +495,16 @@ async function resetIds() {
 async function saveAccessCode(event) {
   event.preventDefault();
   const code = elements.accessCode.value.trim().toLowerCase();
-  if (!/^[a-z0-9]{8}$/.test(code)) {
-    showMessage("The Bluetooth code must be exactly eight lowercase letters or numbers.", "error");
+  if (!/^[a-z0-9]{1,256}$/.test(code)) {
+    showMessage("The Bluetooth code must contain at least one lowercase letter or number.", "error");
     return;
   }
   setBusy(elements.saveAccessButton, true, "Saving…");
   showMessage("Saving the Bluetooth access code…", "working");
   try {
     const response = await command("update_access_code", { code }, 35000);
-    if (response.code !== setupToken) {
-      expectedDisconnectMessage = `Bluetooth is restarting; reconnect to ${response.bluetooth_name}. The new code will fill automatically.`;
-      showMessage(`Saved. Bluetooth will restart as ${response.bluetooth_name}.`, "success");
-    } else {
-      showMessage("Bluetooth access code is unchanged.", "success");
-    }
+    showMessage(`Saved. Reloading now; choose ${response.bluetooth_name} again to reconnect.`, "success");
+    setTimeout(() => window.location.reload(), 700);
   } catch (error) {
     showMessage(error.message, "error");
   } finally {

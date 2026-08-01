@@ -59,7 +59,7 @@
       <div id="unlock-area" class="unlock-area" hidden>
         <label for="radio-code">Eight-character radio code</label>
         <div class="inline-form">
-          <input id="radio-code" type="text" minlength="8" maxlength="8" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="e.g. a1b2c3d4">
+          <input id="radio-code" type="text" minlength="1" maxlength="256" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="Enter the Bluetooth code">
           <button id="unlock-button" class="secondary-button" type="button">Unlock</button>
         </div>
         <small>This is filled automatically from a Bluetooth name such as <strong>Radio-a1b2c3d4</strong>. It is also the fallback-hotspot password.</small>
@@ -166,8 +166,8 @@
 
           <form id="access-form" class="settings-form">
             <label for="access-code">Bluetooth access code</label>
-            <input id="access-code" type="text" minlength="8" maxlength="8" autocapitalize="none" autocomplete="off" spellcheck="false">
-            <small>Changing this restarts Bluetooth. The radio will reappear as <strong>Radio-XXXXXXXX</strong>.</small>
+            <input id="access-code" type="text" minlength="1" maxlength="256" autocapitalize="none" autocomplete="off" spellcheck="false">
+            <small>Use one or more lowercase letters or numbers. Saving fully reloads this page and restarts Bluetooth, so you must choose the radio again.</small>
 
             <div class="button-row">
               <button id="save-access-button" class="primary-button" type="submit">Save Bluetooth code</button>
