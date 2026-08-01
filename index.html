@@ -126,6 +126,58 @@
           <button id="save-button" class="primary-button save-button" type="submit">Save and connect</button>
         </form>
       </section>
+
+      <section class="panel advanced-launcher">
+        <div>
+          <p class="step">Device configuration</p>
+          <h2>Need more control?</h2>
+          <p class="supporting">Manage stream URLs and, when necessary, the radio’s access code or GPIO wiring.</p>
+        </div>
+        <button id="advanced-button" class="secondary-button advanced-button" type="button">Advanced settings</button>
+      </section>
+
+      <section id="advanced-settings" class="panel" hidden>
+        <div class="panel-heading">
+          <div>
+            <p class="step">Advanced settings</p>
+            <h2>Station stream links</h2>
+          </div>
+          <button id="close-advanced-button" class="icon-button" type="button" aria-label="Close advanced settings">×</button>
+        </div>
+        <p class="supporting">Saving these links restarts radio playback so the selected station immediately uses the new configuration.</p>
+
+        <form id="streams-form" class="settings-form">
+          <div id="stream-fields"></div>
+          <div class="button-row">
+            <button id="reset-streams-button" class="danger-button" type="button">Reset stream defaults</button>
+            <button id="save-streams-button" class="primary-button" type="submit">Save streams & restart</button>
+          </div>
+        </form>
+
+        <div class="super-divider">
+          <button id="super-advanced-button" class="quiet-button" type="button">Super advanced settings</button>
+        </div>
+
+        <section id="super-advanced-settings" class="super-settings" hidden>
+          <div class="notice warning">
+            <strong>Physical wiring settings.</strong> Incorrect GPIO values can stop the rotary dial from working. GPIO values below use BCM numbering, not physical header-pin numbers.
+          </div>
+
+          <form id="hardware-form" class="settings-form">
+            <label for="access-code">Bluetooth and hotspot access code</label>
+            <input id="access-code" type="text" minlength="8" maxlength="8" autocapitalize="none" autocomplete="off" spellcheck="false">
+            <small>Changing this restarts Bluetooth and the fallback portal. The radio will reappear as <strong>Radio-XXXXXXXX</strong>.</small>
+
+            <h3>Rotary dial BCM GPIO map</h3>
+            <div id="gpio-fields" class="gpio-grid"></div>
+
+            <div class="button-row">
+              <button id="reset-hardware-button" class="danger-button" type="button">Reset hardware defaults</button>
+              <button id="save-hardware-button" class="primary-button" type="submit">Save hardware settings</button>
+            </div>
+          </form>
+        </section>
+      </section>
     </section>
 
     <section id="message" class="notice" hidden aria-live="polite"></section>

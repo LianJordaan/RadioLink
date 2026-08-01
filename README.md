@@ -36,6 +36,16 @@ without internet access later.
 The password is sent directly from the browser to the radio over BLE. It is not
 sent to GitHub Pages and is not stored by this site.
 
+## Advanced settings
+
+The **Advanced settings** section can read, edit, and reset all five station stream
+URLs. Saving or resetting the links restarts `radio.service` so playback immediately
+uses the selected values.
+
+The nested **Super advanced settings** section controls the eight-character access
+code and BCM GPIO map. Changes restart the affected services. Reset restores this
+radio's original access code (`ewrd5qyw`) and GPIO values (`17, 27, 22, 5, 6`).
+
 ## If Bluetooth permission is blocked
 
 On the published page, tap the site-information icon beside the Chrome address,

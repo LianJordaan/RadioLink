@@ -3,6 +3,16 @@
 const SERVICE_UUID = "42f00001-9b5f-4f6e-9f19-6f4b7c9a4e10";
 const COMMAND_UUID = "42f00002-9b5f-4f6e-9f19-6f4b7c9a4e10";
 const RESPONSE_UUID = "42f00003-9b5f-4f6e-9f19-6f4b7c9a4e10";
+const STATIONS = ["SFM", "OFM", "RSG", "ALGUA", "LEK"];
+const DEFAULT_STREAMS = {
+  SFM: "https://iceant.eclipse-streaming.co.za/SFM",
+  OFM: "https://edge.iono.fm/xice/ofm_live_medium.mp3",
+  RSG: "https://27913.live.streamtheworld.com/RSGAAC_SC",
+  ALGUA: "https://edge.iono.fm/xice/54_medium.aac",
+  LEK: "https://zas3.ndx.co.za:8002/stream",
+};
+const DEFAULT_GPIO = { SFM: 17, OFM: 27, RSG: 22, ALGUA: 5, LEK: 6 };
+const DEFAULT_ACCESS_CODE = "ewrd5qyw";
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
@@ -26,6 +36,20 @@ const elements = {
   wifiPassword: document.querySelector("#wifi-password"),
   wifiForm: document.querySelector("#wifi-form"),
   saveButton: document.querySelector("#save-button"),
+  advancedButton: document.querySelector("#advanced-button"),
+  advancedSettings: document.querySelector("#advanced-settings"),
+  closeAdvancedButton: document.querySelector("#close-advanced-button"),
+  streamsForm: document.querySelector("#streams-form"),
+  streamFields: document.querySelector("#stream-fields"),
+  resetStreamsButton: document.querySelector("#reset-streams-button"),
+  saveStreamsButton: document.querySelector("#save-streams-button"),
+  superAdvancedButton: document.querySelector("#super-advanced-button"),
+  superAdvancedSettings: document.querySelector("#super-advanced-settings"),
+  hardwareForm: document.querySelector("#hardware-form"),
+  accessCode: document.querySelector("#access-code"),
+  gpioFields: document.querySelector("#gpio-fields"),
+  resetHardwareButton: document.querySelector("#reset-hardware-button"),
+  saveHardwareButton: document.querySelector("#save-hardware-button"),
   debugButton: document.querySelector("#debug-button"),
   message: document.querySelector("#message"),
 };
@@ -35,6 +59,8 @@ let commandCharacteristic = null;
 let responseCharacteristic = null;
 let setupToken = "";
 let requestId = 0;
+let advancedLoaded = false;
+let expectedDisconnectMessage = "";
 
 function delay(milliseconds) {
   return new Promise(resolve => setTimeout(resolve, milliseconds));
@@ -61,6 +87,9 @@ function setConnected(connected) {
     commandCharacteristic = null;
     responseCharacteristic = null;
     setupToken = "";
+    advancedLoaded = false;
+    elements.advancedSettings.hidden = true;
+    elements.superAdvancedSettings.hidden = true;
   }
 }
 
@@ -126,7 +155,12 @@ async function connectRadio() {
     });
     device.addEventListener("gattserverdisconnected", () => {
       setConnected(false);
-      showMessage("Bluetooth disconnected. Choose the radio again to continue.", "warning");
+      if (expectedDisconnectMessage) {
+        showMessage(expectedDisconnectMessage, "warning");
+        expectedDisconnectMessage = "";
+      } else {
+        showMessage("Bluetooth disconnected. Choose the radio again to continue.", "warning");
+      }
     });
     const server = await device.gatt.connect();
     const service = await server.getPrimaryService(SERVICE_UUID);
@@ -295,6 +329,146 @@ async function saveWifi(event) {
   }
 }
 
+function renderStreams(streams) {
+  elements.streamFields.replaceChildren();
+  for (const station of STATIONS) {
+    const label = document.createElement("label");
+    label.htmlFor = `stream-${station}`;
+    label.textContent = `${station} stream URL`;
+    const input = document.createElement("input");
+    input.id = `stream-${station}`;
+    input.type = "url";
+    input.required = true;
+    input.maxLength = 500;
+    input.value = streams[station] || "";
+    input.dataset.station = station;
+    input.autocomplete = "off";
+    elements.streamFields.append(label, input);
+  }
+}
+
+function renderHardware(code, gpio) {
+  elements.accessCode.value = code || "";
+  elements.gpioFields.replaceChildren();
+  for (const station of STATIONS) {
+    const wrapper = document.createElement("div");
+    const label = document.createElement("label");
+    label.htmlFor = `gpio-${station}`;
+    label.textContent = station;
+    const input = document.createElement("input");
+    input.id = `gpio-${station}`;
+    input.type = "number";
+    input.min = "2";
+    input.max = "27";
+    input.required = true;
+    input.value = gpio[station];
+    input.dataset.station = station;
+    wrapper.append(label, input);
+    elements.gpioFields.append(wrapper);
+  }
+}
+
+async function openAdvancedSettings() {
+  elements.advancedSettings.hidden = false;
+  elements.advancedSettings.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (advancedLoaded) return;
+  setBusy(elements.advancedButton, true, "Loading…");
+  showMessage("Loading the radio’s current settings over Bluetooth…", "working");
+  try {
+    const streamResponse = await command("get_streams");
+    const hardwareResponse = await command("get_hardware");
+    renderStreams(streamResponse.streams);
+    renderHardware(hardwareResponse.code, hardwareResponse.gpio);
+    advancedLoaded = true;
+    showMessage("Current radio settings loaded.", "success");
+  } catch (error) {
+    showMessage(error.message, "error");
+  } finally {
+    setBusy(elements.advancedButton, false);
+  }
+}
+
+function collectStreams() {
+  const streams = {};
+  for (const input of elements.streamFields.querySelectorAll("input[data-station]")) {
+    streams[input.dataset.station] = input.value.trim();
+  }
+  return streams;
+}
+
+async function updateStreams(streams, button, progressText) {
+  setBusy(button, true, progressText);
+  showMessage("Saving stream links and restarting radio playback…", "working");
+  try {
+    await command("update_streams", { streams }, 35000);
+    renderStreams(streams);
+    showMessage("Stream links saved. Radio playback restarted with the selected station.", "success");
+  } catch (error) {
+    showMessage(error.message, "error");
+  } finally {
+    setBusy(button, false);
+  }
+}
+
+async function saveStreams(event) {
+  event.preventDefault();
+  await updateStreams(collectStreams(), elements.saveStreamsButton, "Saving…");
+}
+
+async function resetStreams() {
+  if (!confirm("Reset all five stream links to the original defaults and restart playback?")) return;
+  await updateStreams({ ...DEFAULT_STREAMS }, elements.resetStreamsButton, "Resetting…");
+}
+
+function collectGpio() {
+  const gpio = {};
+  for (const input of elements.gpioFields.querySelectorAll("input[data-station]")) {
+    gpio[input.dataset.station] = Number.parseInt(input.value, 10);
+  }
+  return gpio;
+}
+
+async function updateHardware(code, gpio, button, progressText) {
+  const normalizedCode = code.trim().toLowerCase();
+  if (!/^[a-z0-9]{8}$/.test(normalizedCode)) {
+    showMessage("The access code must be exactly eight lowercase letters or numbers.", "error");
+    return;
+  }
+  const pins = Object.values(gpio);
+  if (pins.some(pin => !Number.isInteger(pin) || pin < 2 || pin > 27) || new Set(pins).size !== STATIONS.length) {
+    showMessage("GPIO values must be five unique BCM pin numbers from 2 to 27.", "error");
+    return;
+  }
+
+  setBusy(button, true, progressText);
+  showMessage("Saving hardware settings and restarting affected services…", "working");
+  try {
+    const previousCode = setupToken;
+    const response = await command("update_hardware", { code: normalizedCode, gpio }, 35000);
+    renderHardware(response.code, response.gpio);
+    if (response.code !== previousCode) {
+      expectedDisconnectMessage = `Access code changed. Bluetooth is restarting; reconnect to ${response.bluetooth_name}. The new code will fill automatically.`;
+      showMessage(`Saved. Bluetooth will restart as ${response.bluetooth_name} in a few seconds.`, "success");
+    } else {
+      showMessage("Hardware settings saved. The GPIO service restarted and read the current dial position.", "success");
+    }
+  } catch (error) {
+    showMessage(error.message, "error");
+  } finally {
+    setBusy(button, false);
+  }
+}
+
+async function saveHardware(event) {
+  event.preventDefault();
+  await updateHardware(elements.accessCode.value, collectGpio(), elements.saveHardwareButton, "Saving…");
+}
+
+async function resetHardware() {
+  if (!confirm("Reset the access code and GPIO map to this radio’s original defaults? Bluetooth may restart.")) return;
+  await updateHardware(DEFAULT_ACCESS_CODE, { ...DEFAULT_GPIO }, elements.resetHardwareButton, "Resetting…");
+}
+
 elements.connectButton.addEventListener("click", connectRadio);
 elements.unlockButton.addEventListener("click", unlockRadio);
 elements.radioCode.addEventListener("keydown", event => {
@@ -303,6 +477,16 @@ elements.radioCode.addEventListener("keydown", event => {
 elements.refreshButton.addEventListener("click", refreshStatus);
 elements.scanButton.addEventListener("click", scanNetworks);
 elements.wifiForm.addEventListener("submit", saveWifi);
+elements.advancedButton.addEventListener("click", openAdvancedSettings);
+elements.closeAdvancedButton.addEventListener("click", () => { elements.advancedSettings.hidden = true; });
+elements.streamsForm.addEventListener("submit", saveStreams);
+elements.resetStreamsButton.addEventListener("click", resetStreams);
+elements.superAdvancedButton.addEventListener("click", () => {
+  elements.superAdvancedSettings.hidden = !elements.superAdvancedSettings.hidden;
+  if (!elements.superAdvancedSettings.hidden) elements.superAdvancedSettings.scrollIntoView({ behavior: "smooth", block: "nearest" });
+});
+elements.hardwareForm.addEventListener("submit", saveHardware);
+elements.resetHardwareButton.addEventListener("click", resetHardware);
 elements.debugButton.addEventListener("click", () => showDiagnostics());
 
 if (!("bluetooth" in navigator)) {

@@ -272,6 +272,56 @@ small { display: block; margin-top: 7px; color: #718093; }
 .quiet-button { padding: 9px 13px; color: var(--teal); background: var(--teal-pale); }
 .save-button { width: 100%; margin-top: 26px; }
 
+.advanced-launcher {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.advanced-launcher .supporting { margin: 8px 0 0; }
+.advanced-button { min-height: 52px; padding: 0 20px; flex: 0 0 auto; }
+.settings-form label:first-child { margin-top: 0; }
+
+.button-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 11px;
+  margin-top: 25px;
+}
+
+.button-row .primary-button { min-height: 50px; }
+
+.danger-button {
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 1px solid #e5b3b3;
+  border-radius: 13px;
+  color: #9b3333;
+  background: #fff1f1;
+  font-weight: 800;
+}
+
+.super-divider {
+  margin-top: 30px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
+
+.super-settings { margin-top: 22px; }
+.super-settings h3 { margin: 27px 0 8px; font-size: 1.05rem; }
+
+.gpio-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(70px, 1fr));
+  gap: 10px;
+}
+
+.gpio-grid label { margin-top: 8px; font-size: .82rem; }
+.gpio-grid input { min-height: 48px; }
+
 .notice {
   margin: 18px 0;
   padding: 14px 17px;
@@ -307,6 +357,11 @@ footer {
   .connect-grid, .status-grid { grid-template-columns: 1fr; }
   .status-grid { gap: 8px; }
   footer { flex-direction: column; }
+  .advanced-launcher { align-items: stretch; flex-direction: column; }
+  .advanced-button { width: 100%; }
+  .gpio-grid { grid-template-columns: repeat(2, 1fr); }
+  .button-row { align-items: stretch; flex-direction: column-reverse; }
+  .button-row button { width: 100%; }
 }
 
 @media (max-width: 430px) {
