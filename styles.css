@@ -296,15 +296,39 @@ small { display: block; margin-top: 7px; color: #718093; }
   font-weight: 800;
 }
 
-.super-divider {
-  margin-top: 30px;
-  padding-top: 22px;
-  border-top: 1px solid var(--line);
-  text-align: center;
+.advanced-loading {
+  margin: 20px 0 8px;
+  padding: 16px;
+  border: 1px solid #b9dcd8;
+  border-radius: 15px;
+  background: #f1faf8;
 }
 
-.super-settings { margin-top: 22px; }
-.super-settings h3 { margin: 27px 0 8px; font-size: 1.05rem; }
+.loading-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.loading-heading span { color: var(--teal); font-weight: 900; font-variant-numeric: tabular-nums; }
+.advanced-loading small { display: block; margin-top: 8px; color: var(--muted); }
+
+.advanced-loading progress {
+  width: 100%;
+  height: 13px;
+  margin-top: 12px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  background: #dceae8;
+}
+
+.advanced-loading progress::-webkit-progress-bar { border-radius: 999px; background: #dceae8; }
+.advanced-loading progress::-webkit-progress-value { border-radius: 999px; background: linear-gradient(90deg, var(--teal), #26a69a); transition: width .25s ease; }
+.advanced-loading progress::-moz-progress-bar { border-radius: 999px; background: linear-gradient(90deg, var(--teal), #26a69a); }
+
+.device-settings {
+  margin-top: 34px;
+  padding-top: 26px;
+  border-top: 1px solid var(--line);
+}
+
+.device-settings h3 { margin: 0 0 10px; font-size: 1.08rem; }
 
 .station-list { display: grid; gap: 14px; margin-top: 16px; }
 

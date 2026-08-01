@@ -39,13 +39,15 @@ const elements = {
   advancedButton: document.querySelector("#advanced-button"),
   advancedSettings: document.querySelector("#advanced-settings"),
   closeAdvancedButton: document.querySelector("#close-advanced-button"),
+  advancedLoading: document.querySelector("#advanced-loading"),
+  advancedProgress: document.querySelector("#advanced-progress"),
+  advancedProgressPercent: document.querySelector("#advanced-progress-percent"),
+  advancedProgressText: document.querySelector("#advanced-progress-text"),
   stationsForm: document.querySelector("#stations-form"),
   stationFields: document.querySelector("#station-fields"),
   resetStreamsButton: document.querySelector("#reset-streams-button"),
   resetIdsButton: document.querySelector("#reset-ids-button"),
   saveStationsButton: document.querySelector("#save-stations-button"),
-  superAdvancedButton: document.querySelector("#super-advanced-button"),
-  superAdvancedSettings: document.querySelector("#super-advanced-settings"),
   accessForm: document.querySelector("#access-form"),
   accessCode: document.querySelector("#access-code"),
   factoryResetButton: document.querySelector("#factory-reset-button"),
@@ -87,7 +89,7 @@ function setConnected(connected) {
     responseCharacteristic = null;
     advancedLoaded = false;
     elements.advancedSettings.hidden = true;
-    elements.superAdvancedSettings.hidden = true;
+    elements.advancedLoading.hidden = true;
   }
 }
 
@@ -355,18 +357,45 @@ function renderStations() {
   });
 }
 
+function setAdvancedProgress(completed, total, text) {
+  const percentage = Math.round((completed / total) * 100);
+  elements.advancedProgress.value = percentage;
+  elements.advancedProgress.textContent = `${percentage}%`;
+  elements.advancedProgressPercent.textContent = `${percentage}%`;
+  elements.advancedProgressText.textContent = text;
+}
+
 async function loadAdvancedSettings() {
+  const totalItems = DEFAULT_STATIONS.length + 1;
+  elements.advancedLoading.hidden = false;
+  setAdvancedProgress(0, totalItems, "Reading device identity…");
   const hardwareResponse = await command("get_hardware");
+  setAdvancedProgress(1, totalItems, "Device identity loaded. Reading dial position 1 of 10…");
   const drafts = [];
   for (let index = 0; index < DEFAULT_STATIONS.length; index += 1) {
-    const identityResponse = await command("get_slot", { index, part: "identity" });
-    const streamResponse = await command("get_slot", { index, part: "stream" });
-    drafts.push({ ...identityResponse.slot, stream: streamResponse.stream });
+    try {
+      const slotResponse = await command("get_slot", { index });
+      drafts.push(slotResponse.slot);
+    } catch (error) {
+      if (!/too large|one response/i.test(error.message)) throw error;
+      setAdvancedProgress(index + 1, totalItems, `Dial position ${index + 1} is large; loading it in two parts…`);
+      const identityResponse = await command("get_slot", { index, part: "identity" });
+      const streamResponse = await command("get_slot", { index, part: "stream" });
+      drafts.push({ ...identityResponse.slot, stream: streamResponse.stream });
+    }
+    const completed = index + 2;
+    const nextText = index + 1 < DEFAULT_STATIONS.length
+      ? `Dial position ${index + 1} loaded. Reading position ${index + 2} of 10…`
+      : "All radio settings loaded.";
+    setAdvancedProgress(completed, totalItems, nextText);
   }
   stationDrafts = drafts;
   elements.accessCode.value = hardwareResponse.code || "";
   renderStations();
   advancedLoaded = true;
+  setTimeout(() => {
+    if (advancedLoaded) elements.advancedLoading.hidden = true;
+  }, 600);
 }
 
 async function openAdvancedSettings() {
@@ -374,11 +403,11 @@ async function openAdvancedSettings() {
   elements.advancedSettings.scrollIntoView({ behavior: "smooth", block: "start" });
   if (advancedLoaded) return;
   setBusy(elements.advancedButton, true, "Loading…");
-  showMessage("Loading all ten fixed dial positions over Bluetooth…", "working");
   try {
     await loadAdvancedSettings();
     showMessage("The fixed dial layout is ready to edit.", "success");
   } catch (error) {
+    elements.advancedLoading.hidden = true;
     showMessage(error.message, "error");
   } finally {
     setBusy(elements.advancedButton, false);
@@ -453,6 +482,7 @@ async function resetIds() {
     await loadAdvancedSettings();
     showMessage("Character ID presets restored. The first five stream links were preserved.", "success");
   } catch (error) {
+    elements.advancedLoading.hidden = true;
     showMessage(error.message, "error");
   } finally {
     setBusy(elements.resetIdsButton, false);
@@ -512,10 +542,6 @@ elements.closeAdvancedButton.addEventListener("click", () => { elements.advanced
 elements.stationsForm.addEventListener("submit", saveStations);
 elements.resetStreamsButton.addEventListener("click", resetStreams);
 elements.resetIdsButton.addEventListener("click", resetIds);
-elements.superAdvancedButton.addEventListener("click", () => {
-  elements.superAdvancedSettings.hidden = !elements.superAdvancedSettings.hidden;
-  if (!elements.superAdvancedSettings.hidden) elements.superAdvancedSettings.scrollIntoView({ behavior: "smooth", block: "nearest" });
-});
 elements.accessForm.addEventListener("submit", saveAccessCode);
 elements.factoryResetButton.addEventListener("click", factoryReset);
 elements.debugButton.addEventListener("click", () => showDiagnostics());

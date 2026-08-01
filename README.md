@@ -50,10 +50,14 @@ empty positions, and default device character code. Factory reset deliberately p
 Configuration changes are validated before saving and are rolled back if an affected
 radio service cannot restart cleanly.
 
-The nested **Super advanced settings** section edits the device character code used
-in the Bluetooth name, such as `Radio-tester12`. It is an identifier, not a password:
+The bottom of **Advanced settings** edits the device character code used in the
+Bluetooth name, such as `Radio-tester12`. It is an identifier, not a password:
 selecting the radio opens its dashboard automatically. Saving a new code reloads the
 page and requires selecting the newly named radio again.
+
+Opening Advanced settings shows a percentage and progress bar while the fixed dial
+positions are read over Bluetooth. Each position normally loads in one request;
+unusually long entries automatically fall back to a two-part transfer.
 
 If saved Wi-Fi is unavailable, the radio creates an open `Radio-Setup` hotspot. Its
 local gateway page closes the temporary hotspot, lets the phone return to its normal

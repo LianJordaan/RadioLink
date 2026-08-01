@@ -137,6 +137,15 @@
         </div>
         <p class="supporting">The wiring is fixed. Each card shows its BCM GPIO and matching physical header pin; only the character ID and stream link can be edited. Leave both fields empty for an unused position.</p>
 
+        <div id="advanced-loading" class="advanced-loading" hidden>
+          <div class="loading-heading">
+            <strong>Loading radio settings</strong>
+            <span id="advanced-progress-percent">0%</span>
+          </div>
+          <progress id="advanced-progress" max="100" value="0">0%</progress>
+          <small id="advanced-progress-text">Preparing Bluetooth transfer…</small>
+        </div>
+
         <form id="stations-form" class="settings-form">
           <div id="station-fields" class="station-list"></div>
           <div class="button-row">
@@ -146,13 +155,10 @@
           </div>
         </form>
 
-        <div class="super-divider">
-          <button id="super-advanced-button" class="quiet-button" type="button">Super advanced settings</button>
-        </div>
-
-        <section id="super-advanced-settings" class="super-settings" hidden>
+        <section class="device-settings">
+          <h3>Device identity and recovery</h3>
           <div class="notice warning">
-            <strong>Device identity and recovery settings.</strong> The character code forms the radio's Bluetooth name. It is only an identifier and is not required to open the radio.
+            The character code forms the radio's Bluetooth name. It is only an identifier and is not required to open the radio.
           </div>
 
           <form id="access-form" class="settings-form">
