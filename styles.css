@@ -204,6 +204,33 @@ button:disabled { cursor: wait; opacity: .6; }
   border-top: 1px solid var(--line);
 }
 
+.permission-help {
+  margin-top: 22px;
+  padding: 13px 15px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  color: var(--muted);
+  background: #f6f8f8;
+}
+
+.permission-help summary {
+  color: var(--navy-soft);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.permission-help p { margin: 10px 0 0; font-size: .9rem; }
+
+.debug-button {
+  margin-top: 13px;
+  padding: 9px 12px;
+  border: 1px solid #b9c5cc;
+  border-radius: 10px;
+  color: var(--navy-soft);
+  background: white;
+  font-weight: 800;
+}
+
 .inline-form { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
 .secondary-button { padding: 0 22px; color: white; background: var(--navy-soft); }
 

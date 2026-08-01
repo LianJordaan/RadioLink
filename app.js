@@ -26,6 +26,7 @@ const elements = {
   wifiPassword: document.querySelector("#wifi-password"),
   wifiForm: document.querySelector("#wifi-form"),
   saveButton: document.querySelector("#save-button"),
+  debugButton: document.querySelector("#debug-button"),
   message: document.querySelector("#message"),
 };
 
@@ -43,6 +44,7 @@ function showMessage(text, type = "working") {
   elements.message.textContent = text;
   elements.message.className = `notice ${type}`;
   elements.message.hidden = false;
+  requestAnimationFrame(() => elements.message.scrollIntoView({ behavior: "smooth", block: "nearest" }));
 }
 
 function clearMessage() {
@@ -68,8 +70,55 @@ function setBusy(button, busy, busyText = "Working…") {
   button.textContent = busy ? busyText : button.dataset.originalText;
 }
 
+async function browserDiagnostics(error = null) {
+  let brave = false;
+  try {
+    brave = Boolean(navigator.brave && await navigator.brave.isBrave());
+  } catch (_) {
+    brave = Boolean(navigator.brave);
+  }
+  const lines = [
+    "RadioLink Bluetooth diagnostics",
+    "",
+    `Browser: ${brave ? "Brave" : "Not identified as Brave"}`,
+    `Secure HTTPS context: ${window.isSecureContext ? "yes" : "NO"}`,
+    `Web Bluetooth API present: ${"bluetooth" in navigator ? "yes" : "NO"}`,
+    `Bluetooth request function: ${typeof navigator.bluetooth?.requestDevice === "function" ? "yes" : "NO"}`,
+    `Platform: ${navigator.platform || "unknown"}`,
+  ];
+  if (error) {
+    lines.push(`Error name: ${error.name || "unknown"}`);
+    lines.push(`Error message: ${error.message || String(error)}`);
+  }
+  if (brave) {
+    lines.push("");
+    lines.push("RESULT: Brave disables Web Bluetooth. Open this URL in Chrome.");
+  } else if (!("bluetooth" in navigator)) {
+    lines.push("");
+    lines.push("RESULT: This browser does not expose Web Bluetooth.");
+  }
+  return { brave, text: lines.join("\n") };
+}
+
+async function showDiagnostics(error = null) {
+  const report = await browserDiagnostics(error);
+  alert(report.text);
+  return report;
+}
+
 async function connectRadio() {
   clearMessage();
+  const diagnostics = await browserDiagnostics();
+  if (diagnostics.brave) {
+    alert(diagnostics.text);
+    showMessage("Brave disables Web Bluetooth, so it cannot open the radio chooser. Copy this page's address into Chrome on Android.", "error");
+    return;
+  }
+  if (!("bluetooth" in navigator)) {
+    elements.browserWarning.hidden = false;
+    showMessage("This browser cannot open a Web Bluetooth device picker. Use Chrome on Android or a supported desktop computer. iPhone and iPad browsers are not supported.", "error");
+    return;
+  }
   setBusy(elements.connectButton, true, "Looking…");
   try {
     device = await navigator.bluetooth.requestDevice({
@@ -88,7 +137,11 @@ async function connectRadio() {
     elements.radioCode.focus();
     showMessage("Radio found. Enter its eight-character code to unlock setup.", "working");
   } catch (error) {
-    if (error.name !== "NotFoundError") {
+    if (error.name === "NotAllowedError" || /permission.*block/i.test(error.message)) {
+      await showDiagnostics(error);
+      showMessage("Bluetooth permission is blocked. Tap the site-information icon beside the address, open Permissions, reset this site's permissions, and reload. On Android, also allow Chrome's Nearby devices permission in the phone's Settings app.", "error");
+    } else if (error.name !== "NotFoundError") {
+      await showDiagnostics(error);
       showMessage(`Could not connect: ${error.message}`, "error");
     }
   } finally {
@@ -243,10 +296,10 @@ elements.radioCode.addEventListener("keydown", event => {
 elements.refreshButton.addEventListener("click", refreshStatus);
 elements.scanButton.addEventListener("click", scanNetworks);
 elements.wifiForm.addEventListener("submit", saveWifi);
+elements.debugButton.addEventListener("click", () => showDiagnostics());
 
 if (!("bluetooth" in navigator)) {
   elements.browserWarning.hidden = false;
-  elements.connectButton.disabled = true;
 }
 
 if ("serviceWorker" in navigator) {

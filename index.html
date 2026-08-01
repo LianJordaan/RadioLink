@@ -64,6 +64,14 @@
         </div>
         <small>This is the same lowercase code used as the radio’s fallback-hotspot password.</small>
       </div>
+
+      <details class="permission-help">
+        <summary>Bluetooth permission blocked?</summary>
+        <p><strong>Brave disables Web Bluetooth.</strong> Open this page in Chrome on Android or a supported desktop computer.</p>
+        <p>In Chrome, tap the site-information icon beside the address, open <strong>Permissions</strong>, and choose <strong>Reset permissions</strong>. Then reload this page and tap <strong>Choose radio</strong> again.</p>
+        <p>On Android, also open <strong>Settings → Apps → Chrome → Permissions</strong> and allow <strong>Nearby devices</strong>. iPhone and iPad browsers do not currently support Web Bluetooth.</p>
+        <button id="debug-button" class="debug-button" type="button">Show Bluetooth diagnostics</button>
+      </details>
     </section>
 
     <section id="dashboard" hidden>

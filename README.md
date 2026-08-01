@@ -20,7 +20,7 @@ server on the radio is required.
 
 Web Bluetooth requires HTTPS and a user click before the browser can display its
 Bluetooth device chooser. Use Chrome on Android, Windows, macOS, or ChromeOS.
-Safari/iPhone support should not be assumed.
+Brave disables Web Bluetooth, and iPhone/iPad browsers do not support it.
 
 After its first successful load, the service worker caches the page so it can open
 without internet access later.
@@ -35,6 +35,16 @@ without internet access later.
 
 The password is sent directly from the browser to the radio over BLE. It is not
 sent to GitHub Pages and is not stored by this site.
+
+## If Bluetooth permission is blocked
+
+On the published page, tap the site-information icon beside the Chrome address,
+open **Permissions**, and choose **Reset permissions**. Reload the page and select
+**Choose radio** again.
+
+On Android, also open **Settings → Apps → Chrome → Permissions** and allow
+**Nearby devices**. Brave disables Web Bluetooth, and Chrome on iPhone and iPad
+does not support it.
 
 ## BLE protocol
 
