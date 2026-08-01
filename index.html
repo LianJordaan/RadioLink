@@ -160,7 +160,7 @@
 
         <section id="super-advanced-settings" class="super-settings" hidden>
           <div class="notice warning">
-            <strong>Physical wiring settings.</strong> Incorrect GPIO values can stop the rotary dial from working. GPIO values below use BCM numbering, not physical header-pin numbers.
+            <strong>Physical wiring settings.</strong> Each station needs a unique ID, stream URL, and BCM GPIO pin. Incorrect pin numbers can stop the rotary dial from working. These are BCM numbers, not physical header-pin numbers.
           </div>
 
           <form id="hardware-form" class="settings-form">
@@ -168,13 +168,27 @@
             <input id="access-code" type="text" minlength="8" maxlength="8" autocapitalize="none" autocomplete="off" spellcheck="false">
             <small>Changing this restarts Bluetooth and the fallback portal. The radio will reappear as <strong>Radio-XXXXXXXX</strong>.</small>
 
-            <h3>Rotary dial BCM GPIO map</h3>
-            <div id="gpio-fields" class="gpio-grid"></div>
+            <div class="station-heading">
+              <div>
+                <h3>Stations and rotary dial map</h3>
+                <small>IDs are 1–16 letters, numbers, hyphens, or underscores. IDs and pins must both be unique.</small>
+              </div>
+              <button id="add-station-button" class="secondary-button" type="button">Add station</button>
+            </div>
+            <div id="gpio-fields" class="station-list"></div>
 
             <div class="button-row">
-              <button id="reset-hardware-button" class="danger-button" type="button">Reset hardware defaults</button>
-              <button id="save-hardware-button" class="primary-button" type="submit">Save hardware settings</button>
+              <button id="reset-gpio-button" class="danger-button" type="button">Reset station IDs &amp; GPIO only</button>
+              <button id="save-hardware-button" class="primary-button" type="submit">Save station layout</button>
             </div>
+
+            <section class="factory-zone">
+              <div>
+                <strong>Factory settings</strong>
+                <p>Restores the original five stations, links, GPIO pins, and Bluetooth/access code. Saved Wi-Fi networks are preserved.</p>
+              </div>
+              <button id="factory-reset-button" class="factory-button" type="button">Factory reset everything</button>
+            </section>
           </form>
         </section>
       </section>

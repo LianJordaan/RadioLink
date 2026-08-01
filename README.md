@@ -38,13 +38,21 @@ sent to GitHub Pages and is not stored by this site.
 
 ## Advanced settings
 
-The **Advanced settings** section can read, edit, and reset all five station stream
-URLs. Saving or resetting the links restarts `radio.service` so playback immediately
-uses the selected values.
+The **Advanced settings** section can read, edit, and reset station stream URLs.
+Saving or resetting the links restarts `radio.service` so playback immediately uses
+the selected values.
 
 The nested **Super advanced settings** section controls the eight-character access
-code and BCM GPIO map. Changes restart the affected services. Reset restores this
-radio's original access code (`ewrd5qyw`) and GPIO values (`17, 27, 22, 5, 6`).
+code and the complete station layout. It can rename station IDs, change BCM pins,
+remove stations, or add up to 12 stations. Every station ID and GPIO pin must be
+unique, and every station needs an HTTP or HTTPS stream URL.
+
+**Reset station IDs & GPIO only** restores the original five IDs and pins while
+preserving stream links by dial position and leaving the access code alone.
+**Factory reset everything** restores the original five IDs, streams, pins, and the
+access code (`ewrd5qyw`). Factory reset deliberately preserves saved Wi-Fi networks.
+Configuration changes are validated before saving and are rolled back if an affected
+radio service cannot restart cleanly.
 
 ## If Bluetooth permission is blocked
 
