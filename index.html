@@ -56,15 +56,6 @@
         </div>
       </div>
 
-      <div id="unlock-area" class="unlock-area" hidden>
-        <label for="radio-code">Eight-character radio code</label>
-        <div class="inline-form">
-          <input id="radio-code" type="text" minlength="1" maxlength="256" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="Enter the Bluetooth code">
-          <button id="unlock-button" class="secondary-button" type="button">Unlock</button>
-        </div>
-        <small>This is filled automatically from a Bluetooth name such as <strong>Radio-a1b2c3d4</strong>. It is also the fallback-hotspot password.</small>
-      </div>
-
       <details class="permission-help">
         <summary>Bluetooth permission blocked?</summary>
         <p><strong>Brave disables Web Bluetooth.</strong> Open this page in Chrome on Android or a supported desktop computer.</p>
@@ -103,7 +94,7 @@
       <section class="panel setup-panel">
         <div class="panel-heading">
           <div>
-            <p class="step">Step 2</p>
+            <p class="step">Wi-Fi setup</p>
             <h2>Choose a Wi-Fi network</h2>
           </div>
           <button id="scan-button" class="quiet-button" type="button">Scan again</button>
@@ -161,22 +152,22 @@
 
         <section id="super-advanced-settings" class="super-settings" hidden>
           <div class="notice warning">
-            <strong>Access and recovery settings.</strong> The Bluetooth code protects configuration access. It is separate from the fallback hotspot, which is now open and only directs users to RadioLink.
+            <strong>Device identity and recovery settings.</strong> The character code forms the radio's Bluetooth name. It is only an identifier and is not required to open the radio.
           </div>
 
           <form id="access-form" class="settings-form">
-            <label for="access-code">Bluetooth access code</label>
+            <label for="access-code">Device character code</label>
             <input id="access-code" type="text" minlength="1" maxlength="256" autocapitalize="none" autocomplete="off" spellcheck="false">
-            <small>Use one or more lowercase letters or numbers. Saving fully reloads this page and restarts Bluetooth, so you must choose the radio again.</small>
+            <small>Use one or more lowercase letters or numbers. Saving reloads this page and restarts Bluetooth so the new device name appears.</small>
 
             <div class="button-row">
-              <button id="save-access-button" class="primary-button" type="submit">Save Bluetooth code</button>
+              <button id="save-access-button" class="primary-button" type="submit">Save device code</button>
             </div>
 
             <section class="factory-zone">
               <div>
                 <strong>Factory settings</strong>
-                <p>Restores the five preset stations, five empty positions, original stream links, and Bluetooth code. The fixed GPIO layout and saved Wi-Fi networks are preserved.</p>
+                <p>Restores the five preset stations, five empty positions, original stream links, and device character code. The fixed GPIO layout and saved Wi-Fi networks are preserved.</p>
               </div>
               <button id="factory-reset-button" class="factory-button" type="button">Factory reset everything</button>
             </section>

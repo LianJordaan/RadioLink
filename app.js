@@ -24,9 +24,6 @@ const elements = {
   connectButton: document.querySelector("#connect-button"),
   connectionChip: document.querySelector("#connection-chip"),
   deviceName: document.querySelector("#device-name"),
-  unlockArea: document.querySelector("#unlock-area"),
-  radioCode: document.querySelector("#radio-code"),
-  unlockButton: document.querySelector("#unlock-button"),
   dashboard: document.querySelector("#dashboard"),
   radioName: document.querySelector("#radio-name"),
   wifiStatus: document.querySelector("#wifi-status"),
@@ -60,7 +57,6 @@ const elements = {
 let device = null;
 let commandCharacteristic = null;
 let responseCharacteristic = null;
-let setupToken = "";
 let requestId = 0;
 let advancedLoaded = false;
 let expectedDisconnectMessage = "";
@@ -85,12 +81,10 @@ function clearMessage() {
 function setConnected(connected) {
   elements.connectionChip.classList.toggle("connected", connected);
   elements.connectionChip.innerHTML = connected ? "<i></i>Bluetooth connected" : "<i></i>Not connected";
-  elements.unlockArea.hidden = !connected;
   if (!connected) {
     elements.dashboard.hidden = true;
     commandCharacteristic = null;
     responseCharacteristic = null;
-    setupToken = "";
     advancedLoaded = false;
     elements.advancedSettings.hidden = true;
     elements.superAdvancedSettings.hidden = true;
@@ -171,16 +165,11 @@ async function connectRadio() {
     commandCharacteristic = await service.getCharacteristic(COMMAND_UUID);
     responseCharacteristic = await service.getCharacteristic(RESPONSE_UUID);
     elements.deviceName.textContent = device.name || "RadioLink radio";
-    const codeMatch = (device.name || "").match(/^Radio-([a-z0-9]{1,20})$/i);
-    if (codeMatch) elements.radioCode.value = codeMatch[1].toLowerCase();
     setConnected(true);
-    if (codeMatch) {
-      elements.unlockButton.focus();
-      showMessage(`Radio found. Code ${codeMatch[1].toLowerCase()} was filled from its Bluetooth name; tap Unlock.`, "working");
-    } else {
-      elements.radioCode.focus();
-      showMessage("Radio found. Enter its Bluetooth access code to unlock setup.", "working");
-    }
+    showMessage("Radio connected. Loading its status and nearby Wi-Fi networks…", "working");
+    renderStatus(await command("status"));
+    elements.dashboard.hidden = false;
+    await scanNetworks();
   } catch (error) {
     if (error.name === "NotAllowedError" || /permission.*block/i.test(error.message)) {
       await showDiagnostics(error);
@@ -226,7 +215,7 @@ async function readResponse() {
 async function command(operation, payload = {}, timeout = 80000) {
   if (!commandCharacteristic || !responseCharacteristic) throw new Error("Bluetooth is not connected");
   const id = ++requestId;
-  await writeCommand({ id, op: operation, token: setupToken, ...payload });
+  await writeCommand({ id, op: operation, ...payload });
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
     await delay(450);
@@ -244,28 +233,6 @@ function renderStatus(status) {
   elements.wifiStatus.textContent = status.wifi ? (status.connection || "Connected") : "Not connected";
   elements.ipAddress.textContent = status.ip || "No address";
   elements.stationName.textContent = status.station || "Nothing selected";
-}
-
-async function unlockRadio() {
-  const code = elements.radioCode.value.trim().toLowerCase();
-  if (!/^[a-z0-9]{1,256}$/.test(code)) {
-    showMessage("Enter the radio’s access code using lowercase letters and numbers.", "error");
-    return;
-  }
-  setupToken = code;
-  setBusy(elements.unlockButton, true, "Unlocking…");
-  showMessage("Reading radio status over Bluetooth…", "working");
-  try {
-    const status = await command("status");
-    renderStatus(status);
-    elements.dashboard.hidden = false;
-    showMessage("Radio unlocked. You can configure it without disconnecting Bluetooth.", "success");
-    await scanNetworks();
-  } catch (error) {
-    showMessage(error.message, "error");
-  } finally {
-    setBusy(elements.unlockButton, false);
-  }
 }
 
 async function refreshStatus() {
@@ -452,7 +419,7 @@ async function updateStationSlots(stations, button, progressText, successText) {
   setBusy(button, true, progressText);
   showMessage("Validating the station IDs and restarting the dial and playback services…", "working");
   try {
-    await command("update_slots", { stations, code: setupToken }, 50000);
+    await command("update_slots", { stations }, 50000);
     stationDrafts = stations.map(station => ({ ...station }));
     renderStations();
     showMessage(successText, "success");
@@ -496,11 +463,11 @@ async function saveAccessCode(event) {
   event.preventDefault();
   const code = elements.accessCode.value.trim().toLowerCase();
   if (!/^[a-z0-9]{1,256}$/.test(code)) {
-    showMessage("The Bluetooth code must contain at least one lowercase letter or number.", "error");
+    showMessage("The device character code must contain at least one lowercase letter or number.", "error");
     return;
   }
   setBusy(elements.saveAccessButton, true, "Saving…");
-  showMessage("Saving the Bluetooth access code…", "working");
+  showMessage("Saving the device character code…", "working");
   try {
     const response = await command("update_access_code", { code }, 35000);
     showMessage(`Saved. Reloading now; choose ${response.bluetooth_name} again to reconnect.`, "success");
@@ -513,12 +480,12 @@ async function saveAccessCode(event) {
 }
 
 async function factoryReset() {
-  if (!confirm("Factory-reset all character IDs, stream links, and the Bluetooth code? Saved Wi-Fi networks will NOT be erased.")) return;
+  if (!confirm("Factory-reset all character IDs, stream links, and the device character code? Saved Wi-Fi networks will NOT be erased.")) return;
   if (!confirm("Restore every original RadioLink value now?")) return;
   setBusy(elements.factoryResetButton, true, "Factory resetting…");
   showMessage("Restoring all original radio settings…", "working");
   try {
-    const previousCode = setupToken;
+    const previousCode = elements.accessCode.value.trim().toLowerCase();
     await command("factory_reset", {}, 50000);
     stationDrafts = DEFAULT_STATIONS.map(station => ({ ...station }));
     elements.accessCode.value = DEFAULT_ACCESS_CODE;
@@ -537,10 +504,6 @@ async function factoryReset() {
 }
 
 elements.connectButton.addEventListener("click", connectRadio);
-elements.unlockButton.addEventListener("click", unlockRadio);
-elements.radioCode.addEventListener("keydown", event => {
-  if (event.key === "Enter") unlockRadio();
-});
 elements.refreshButton.addEventListener("click", refreshStatus);
 elements.scanButton.addEventListener("click", scanNetworks);
 elements.wifiForm.addEventListener("submit", saveWifi);

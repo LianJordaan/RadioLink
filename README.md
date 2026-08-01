@@ -28,9 +28,9 @@ without internet access later.
 ## Using it
 
 1. Switch Bluetooth on and open the published page.
-2. Select **Choose radio** and pick the nearby `Radio-XXXXXXXX` device.
-3. For short codes, the page fills the code from the Bluetooth name automatically.
-4. Scan for Wi-Fi, enter the password, and select **Save and connect**.
+2. Select **Choose radio** and pick the nearby `RadioLink` device.
+3. The dashboard and nearby Wi-Fi networks load automatically.
+4. Enter the Wi-Fi password and select **Save and connect**.
 
 The password is sent directly from the browser to the radio over BLE. It is not
 sent to GitHub Pages and is not stored by this site.
@@ -43,16 +43,17 @@ the character ID and stream URL, but cannot add positions, remove positions, or 
 the wiring map. Blank IDs represent unused dial positions. Non-empty IDs must be
 unique, including uppercase/lowercase differences.
 
-The nested **Super advanced settings** section controls the variable-length Bluetooth
-access code. It accepts 1–256 lowercase letters or numbers and is separate from the
-fallback hotspot. Saving it fully reloads the page, requiring a fresh radio selection.
-
 **Reset character IDs** restores `SFM`, `OFM`, `RSG`, `ALGUA`, and `LEK` on the
 first five positions and clears the remaining five IDs while preserving the first
 five stream links. **Factory reset everything** restores the IDs, original links,
-and access code (`ewrd5qyw`). Factory reset deliberately preserves saved Wi-Fi networks.
+empty positions, and default device character code. Factory reset deliberately preserves saved Wi-Fi networks.
 Configuration changes are validated before saving and are rolled back if an affected
 radio service cannot restart cleanly.
+
+The nested **Super advanced settings** section edits the device character code used
+in the Bluetooth name, such as `Radio-tester12`. It is an identifier, not a password:
+selecting the radio opens its dashboard automatically. Saving a new code reloads the
+page and requires selecting the newly named radio again.
 
 If saved Wi-Fi is unavailable, the radio creates an open `Radio-Setup` hotspot. Its
 local gateway page closes the temporary hotspot, lets the phone return to its normal
