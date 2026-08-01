@@ -1,0 +1,9 @@
+{
+  "name": "RadioLink Bluetooth Setup",
+  "short_name": "RadioLink",
+  "description": "Configure a RadioLink internet radio over Bluetooth.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#10263d",
+  "theme_color": "#10263d"
+}

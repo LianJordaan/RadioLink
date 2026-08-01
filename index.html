@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10263d">
+  <meta name="description" content="Configure a RadioLink internet radio over Bluetooth.">
+  <title>RadioLink</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <main class="shell">
+    <header class="hero">
+      <div class="radio-mark" aria-hidden="true">
+        <span class="speaker"></span>
+        <span class="dial"></span>
+        <span class="wave wave-one"></span>
+        <span class="wave wave-two"></span>
+      </div>
+      <div>
+        <p class="eyebrow">Bluetooth setup</p>
+        <h1>RadioLink</h1>
+        <p class="tagline">Tune the radio into its Wi-Fi without cables, apps, or opening the box.</p>
+      </div>
+    </header>
+
+    <section id="browser-warning" class="notice warning" hidden>
+      <strong>This browser cannot use Web Bluetooth.</strong>
+      Open this page in Chrome on Android, Windows, macOS, or ChromeOS.
+    </section>
+
+    <section class="panel connect-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="step">Step 1</p>
+          <h2>Connect to your radio</h2>
+        </div>
+        <span id="connection-chip" class="status-chip"><i></i>Not connected</span>
+      </div>
+
+      <p class="supporting">Keep Bluetooth switched on and stay near the radio. Your browser will ask which RadioLink device to use.</p>
+
+      <div class="connect-grid">
+        <button id="connect-button" class="primary-button" type="button">
+          <span class="bluetooth-icon" aria-hidden="true">ᛒ</span>
+          Choose radio
+        </button>
+        <div class="device-box">
+          <span>Selected device</span>
+          <strong id="device-name">None yet</strong>
+        </div>
+      </div>
+
+      <div id="unlock-area" class="unlock-area" hidden>
+        <label for="radio-code">Eight-character radio code</label>
+        <div class="inline-form">
+          <input id="radio-code" type="text" minlength="8" maxlength="8" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="e.g. a1b2c3d4">
+          <button id="unlock-button" class="secondary-button" type="button">Unlock</button>
+        </div>
+        <small>This is the same lowercase code used as the radio’s fallback-hotspot password.</small>
+      </div>
+    </section>
+
+    <section id="dashboard" hidden>
+      <section class="panel status-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="step">Radio status</p>
+            <h2 id="radio-name">Your radio</h2>
+          </div>
+          <button id="refresh-button" class="icon-button" type="button" aria-label="Refresh status" title="Refresh status">↻</button>
+        </div>
+
+        <div class="status-grid">
+          <article>
+            <span>Wi-Fi</span>
+            <strong id="wifi-status">—</strong>
+          </article>
+          <article>
+            <span>IP address</span>
+            <strong id="ip-address">—</strong>
+          </article>
+          <article>
+            <span>Playing</span>
+            <strong id="station-name">—</strong>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel setup-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="step">Step 2</p>
+            <h2>Choose a Wi-Fi network</h2>
+          </div>
+          <button id="scan-button" class="quiet-button" type="button">Scan again</button>
+        </div>
+
+        <form id="wifi-form">
+          <label for="network-select">Nearby networks</label>
+          <select id="network-select" name="network">
+            <option value="">Scan to find nearby Wi-Fi</option>
+          </select>
+
+          <label for="manual-ssid">Manual network name <span>(optional)</span></label>
+          <input id="manual-ssid" name="manual-ssid" maxlength="32" autocomplete="off" placeholder="For a hidden network">
+          <small>If filled in, this name overrides the selected network.</small>
+
+          <label for="wifi-password">Wi-Fi password</label>
+          <input id="wifi-password" name="password" type="text" maxlength="63" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Paste or type the password">
+          <small>Shown as normal text so it is easy to paste and check. Leave blank only for an open network.</small>
+
+          <button id="save-button" class="primary-button save-button" type="submit">Save and connect</button>
+        </form>
+      </section>
+    </section>
+
+    <section id="message" class="notice" hidden aria-live="polite"></section>
+
+    <footer>
+      <span>RadioLink talks directly to the radio over Bluetooth.</span>
+      <span>No Wi-Fi password is sent to this website or stored in your browser.</span>
+    </footer>
+  </main>
+</body>
+</html>
