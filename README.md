@@ -30,7 +30,6 @@ without internet access later.
 1. Switch Bluetooth on and open the published page.
 2. Select **Choose radio** and pick the nearby `Radio-XXXXXXXX` device.
 3. The page fills the eight-character code from that Bluetooth name automatically.
-   The same code is also the fallback-hotspot password.
 4. Scan for Wi-Fi, enter the password, and select **Save and connect**.
 
 The password is sent directly from the browser to the radio over BLE. It is not
@@ -38,21 +37,26 @@ sent to GitHub Pages and is not stored by this site.
 
 ## Advanced settings
 
-The **Advanced settings** section can read, edit, and reset station stream URLs.
-Saving or resetting the links restarts `radio.service` so playback immediately uses
-the selected values.
+The **Advanced settings** section shows ten fixed physical dial positions. Every card
+shows its BCM GPIO number and Raspberry Pi physical header-pin number. Users can edit
+the character ID and stream URL, but cannot add positions, remove positions, or alter
+the wiring map. Blank IDs represent unused dial positions. Non-empty IDs must be
+unique, including uppercase/lowercase differences.
 
 The nested **Super advanced settings** section controls the eight-character access
-code and the complete station layout. It can rename station IDs, change BCM pins,
-remove stations, or add up to 12 stations. Every station ID and GPIO pin must be
-unique, and every station needs an HTTP or HTTPS stream URL.
+code. It is separate from the fallback hotspot.
 
-**Reset station IDs & GPIO only** restores the original five IDs and pins while
-preserving stream links by dial position and leaving the access code alone.
-**Factory reset everything** restores the original five IDs, streams, pins, and the
-access code (`ewrd5qyw`). Factory reset deliberately preserves saved Wi-Fi networks.
+**Reset character IDs** restores `SFM`, `OFM`, `RSG`, `ALGUA`, and `LEK` on the
+first five positions and clears the remaining five IDs while preserving the first
+five stream links. **Factory reset everything** restores the IDs, original links,
+and access code (`ewrd5qyw`). Factory reset deliberately preserves saved Wi-Fi networks.
 Configuration changes are validated before saving and are rolled back if an affected
 radio service cannot restart cleanly.
+
+If saved Wi-Fi is unavailable, the radio creates an open `Radio-Setup` hotspot. Its
+local gateway page closes the temporary hotspot, lets the phone return to its normal
+internet connection, and redirects to `https://radio.jorda.co.za/`. Wi-Fi details are
+then configured over Bluetooth from the published RadioLink page.
 
 ## If Bluetooth permission is blocked
 

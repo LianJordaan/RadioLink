@@ -131,7 +131,7 @@
         <div>
           <p class="step">Device configuration</p>
           <h2>Need more control?</h2>
-          <p class="supporting">Manage stream URLs and, when necessary, the radio’s access code or GPIO wiring.</p>
+          <p class="supporting">Name the ten fixed dial positions and manage their stream URLs.</p>
         </div>
         <button id="advanced-button" class="secondary-button advanced-button" type="button">Advanced settings</button>
       </section>
@@ -140,17 +140,18 @@
         <div class="panel-heading">
           <div>
             <p class="step">Advanced settings</p>
-            <h2>Station stream links</h2>
+            <h2>Dial stations</h2>
           </div>
           <button id="close-advanced-button" class="icon-button" type="button" aria-label="Close advanced settings">×</button>
         </div>
-        <p class="supporting">Saving these links restarts radio playback so the selected station immediately uses the new configuration.</p>
+        <p class="supporting">The wiring is fixed. Each card shows its BCM GPIO and matching physical header pin; only the character ID and stream link can be edited. Leave both fields empty for an unused position.</p>
 
-        <form id="streams-form" class="settings-form">
-          <div id="stream-fields"></div>
+        <form id="stations-form" class="settings-form">
+          <div id="station-fields" class="station-list"></div>
           <div class="button-row">
             <button id="reset-streams-button" class="danger-button" type="button">Reset stream defaults</button>
-            <button id="save-streams-button" class="primary-button" type="submit">Save streams & restart</button>
+            <button id="reset-ids-button" class="danger-button" type="button">Reset character IDs</button>
+            <button id="save-stations-button" class="primary-button" type="submit">Save stations &amp; restart</button>
           </div>
         </form>
 
@@ -160,32 +161,22 @@
 
         <section id="super-advanced-settings" class="super-settings" hidden>
           <div class="notice warning">
-            <strong>Physical wiring settings.</strong> Each station needs a unique ID, stream URL, and BCM GPIO pin. Incorrect pin numbers can stop the rotary dial from working. These are BCM numbers, not physical header-pin numbers.
+            <strong>Access and recovery settings.</strong> The Bluetooth code protects configuration access. It is separate from the fallback hotspot, which is now open and only directs users to RadioLink.
           </div>
 
-          <form id="hardware-form" class="settings-form">
-            <label for="access-code">Bluetooth and hotspot access code</label>
+          <form id="access-form" class="settings-form">
+            <label for="access-code">Bluetooth access code</label>
             <input id="access-code" type="text" minlength="8" maxlength="8" autocapitalize="none" autocomplete="off" spellcheck="false">
-            <small>Changing this restarts Bluetooth and the fallback portal. The radio will reappear as <strong>Radio-XXXXXXXX</strong>.</small>
-
-            <div class="station-heading">
-              <div>
-                <h3>Stations and rotary dial map</h3>
-                <small>IDs are 1–16 letters, numbers, hyphens, or underscores. IDs and pins must both be unique.</small>
-              </div>
-              <button id="add-station-button" class="secondary-button" type="button">Add station</button>
-            </div>
-            <div id="gpio-fields" class="station-list"></div>
+            <small>Changing this restarts Bluetooth. The radio will reappear as <strong>Radio-XXXXXXXX</strong>.</small>
 
             <div class="button-row">
-              <button id="reset-gpio-button" class="danger-button" type="button">Reset station IDs &amp; GPIO only</button>
-              <button id="save-hardware-button" class="primary-button" type="submit">Save station layout</button>
+              <button id="save-access-button" class="primary-button" type="submit">Save Bluetooth code</button>
             </div>
 
             <section class="factory-zone">
               <div>
                 <strong>Factory settings</strong>
-                <p>Restores the original five stations, links, GPIO pins, and Bluetooth/access code. Saved Wi-Fi networks are preserved.</p>
+                <p>Restores the five preset stations, five empty positions, original stream links, and Bluetooth code. The fixed GPIO layout and saved Wi-Fi networks are preserved.</p>
               </div>
               <button id="factory-reset-button" class="factory-button" type="button">Factory reset everything</button>
             </section>

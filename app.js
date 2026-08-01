@@ -4,13 +4,17 @@ const SERVICE_UUID = "42f00001-9b5f-4f6e-9f19-6f4b7c9a4e10";
 const COMMAND_UUID = "42f00002-9b5f-4f6e-9f19-6f4b7c9a4e10";
 const RESPONSE_UUID = "42f00003-9b5f-4f6e-9f19-6f4b7c9a4e10";
 const DEFAULT_STATIONS = [
-  { id: "SFM", gpio: 17, stream: "https://iceant.eclipse-streaming.co.za/SFM" },
-  { id: "OFM", gpio: 27, stream: "https://edge.iono.fm/xice/ofm_live_medium.mp3" },
-  { id: "RSG", gpio: 22, stream: "https://27913.live.streamtheworld.com/RSGAAC_SC" },
-  { id: "ALGUA", gpio: 5, stream: "https://edge.iono.fm/xice/54_medium.aac" },
-  { id: "LEK", gpio: 6, stream: "https://zas3.ndx.co.za:8002/stream" },
+  { id: "SFM", gpio: 17, pin: 11, stream: "https://iceant.eclipse-streaming.co.za/SFM" },
+  { id: "OFM", gpio: 27, pin: 13, stream: "https://edge.iono.fm/xice/ofm_live_medium.mp3" },
+  { id: "RSG", gpio: 22, pin: 15, stream: "https://27913.live.streamtheworld.com/RSGAAC_SC" },
+  { id: "ALGUA", gpio: 5, pin: 29, stream: "https://edge.iono.fm/xice/54_medium.aac" },
+  { id: "LEK", gpio: 6, pin: 31, stream: "https://zas3.ndx.co.za:8002/stream" },
+  { id: "", gpio: 26, pin: 37, stream: "" },
+  { id: "", gpio: 23, pin: 16, stream: "" },
+  { id: "", gpio: 24, pin: 18, stream: "" },
+  { id: "", gpio: 25, pin: 22, stream: "" },
+  { id: "", gpio: 16, pin: 36, stream: "" },
 ];
-const MAX_STATIONS = 12;
 const DEFAULT_ACCESS_CODE = "ewrd5qyw";
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -38,19 +42,17 @@ const elements = {
   advancedButton: document.querySelector("#advanced-button"),
   advancedSettings: document.querySelector("#advanced-settings"),
   closeAdvancedButton: document.querySelector("#close-advanced-button"),
-  streamsForm: document.querySelector("#streams-form"),
-  streamFields: document.querySelector("#stream-fields"),
+  stationsForm: document.querySelector("#stations-form"),
+  stationFields: document.querySelector("#station-fields"),
   resetStreamsButton: document.querySelector("#reset-streams-button"),
-  saveStreamsButton: document.querySelector("#save-streams-button"),
+  resetIdsButton: document.querySelector("#reset-ids-button"),
+  saveStationsButton: document.querySelector("#save-stations-button"),
   superAdvancedButton: document.querySelector("#super-advanced-button"),
   superAdvancedSettings: document.querySelector("#super-advanced-settings"),
-  hardwareForm: document.querySelector("#hardware-form"),
+  accessForm: document.querySelector("#access-form"),
   accessCode: document.querySelector("#access-code"),
-  gpioFields: document.querySelector("#gpio-fields"),
-  addStationButton: document.querySelector("#add-station-button"),
-  resetGpioButton: document.querySelector("#reset-gpio-button"),
   factoryResetButton: document.querySelector("#factory-reset-button"),
-  saveHardwareButton: document.querySelector("#save-hardware-button"),
+  saveAccessButton: document.querySelector("#save-access-button"),
   debugButton: document.querySelector("#debug-button"),
   message: document.querySelector("#message"),
 };
@@ -331,61 +333,41 @@ async function saveWifi(event) {
   }
 }
 
-function renderStreams() {
-  elements.streamFields.replaceChildren();
-  stationDrafts.forEach((station, index) => {
-    const label = document.createElement("label");
-    label.htmlFor = `stream-${index}`;
-    label.textContent = `${station.id} stream URL`;
-    const input = document.createElement("input");
-    input.id = `stream-${index}`;
-    input.type = "url";
-    input.required = true;
-    input.maxLength = 350;
-    input.value = station.stream;
-    input.dataset.station = station.id;
-    input.dataset.index = String(index);
-    input.autocomplete = "off";
-    elements.streamFields.append(label, input);
-  });
-}
-
-function renderHardware() {
-  elements.gpioFields.replaceChildren();
+function renderStations() {
+  elements.stationFields.replaceChildren();
   stationDrafts.forEach((station, index) => {
     const card = document.createElement("fieldset");
-    card.className = "station-card";
+    card.className = `fixed-station-card${station.id ? "" : " empty"}`;
 
     const legend = document.createElement("legend");
     legend.textContent = `Dial position ${index + 1}`;
 
+    const pinStrip = document.createElement("div");
+    pinStrip.className = "pin-strip";
+    const gpioBadge = document.createElement("span");
+    gpioBadge.textContent = `BCM GPIO ${station.gpio}`;
+    const physicalBadge = document.createElement("span");
+    physicalBadge.textContent = `Physical pin ${station.pin}`;
+    pinStrip.append(gpioBadge, physicalBadge);
+
+    const fields = document.createElement("div");
+    fields.className = "station-field-grid";
+
+    const idWrap = document.createElement("div");
     const idLabel = document.createElement("label");
     idLabel.htmlFor = `station-id-${index}`;
-    idLabel.textContent = "Station ID";
+    idLabel.textContent = "Character ID";
     const idInput = document.createElement("input");
     idInput.id = `station-id-${index}`;
     idInput.dataset.field = "id";
     idInput.dataset.index = String(index);
     idInput.value = station.id;
-    idInput.maxLength = 16;
-    idInput.pattern = "[A-Za-z0-9_-]{1,16}";
-    idInput.required = true;
-    idInput.autocapitalize = "characters";
+    idInput.placeholder = "Empty position";
+    idInput.autocomplete = "off";
     idInput.spellcheck = false;
+    idWrap.append(idLabel, idInput);
 
-    const pinLabel = document.createElement("label");
-    pinLabel.htmlFor = `station-gpio-${index}`;
-    pinLabel.textContent = "BCM GPIO pin";
-    const pinInput = document.createElement("input");
-    pinInput.id = `station-gpio-${index}`;
-    pinInput.dataset.field = "gpio";
-    pinInput.dataset.index = String(index);
-    pinInput.type = "number";
-    pinInput.min = "2";
-    pinInput.max = "27";
-    pinInput.required = true;
-    pinInput.value = station.gpio;
-
+    const streamWrap = document.createElement("div");
     const streamLabel = document.createElement("label");
     streamLabel.htmlFor = `station-stream-${index}`;
     streamLabel.textContent = "Stream URL";
@@ -394,35 +376,29 @@ function renderHardware() {
     streamInput.dataset.field = "stream";
     streamInput.dataset.index = String(index);
     streamInput.type = "url";
-    streamInput.maxLength = 350;
-    streamInput.required = true;
+    streamInput.maxLength = 300;
     streamInput.value = station.stream;
+    streamInput.placeholder = station.id ? "https://…" : "Leave empty until this position is used";
     streamInput.autocomplete = "off";
+    streamWrap.append(streamLabel, streamInput);
 
-    const removeButton = document.createElement("button");
-    removeButton.type = "button";
-    removeButton.className = "remove-station-button";
-    removeButton.textContent = "Remove station";
-    removeButton.disabled = stationDrafts.length === 1;
-    removeButton.addEventListener("click", () => removeStation(index));
-
-    card.append(legend, idLabel, idInput, pinLabel, pinInput, streamLabel, streamInput, removeButton);
-    elements.gpioFields.append(card);
+    fields.append(idWrap, streamWrap);
+    card.append(legend, pinStrip, fields);
+    elements.stationFields.append(card);
   });
-  elements.addStationButton.disabled = stationDrafts.length >= MAX_STATIONS;
 }
 
 async function loadAdvancedSettings() {
   const hardwareResponse = await command("get_hardware");
   const drafts = [];
-  for (const [id, gpio] of Object.entries(hardwareResponse.gpio)) {
-    const streamResponse = await command("get_stream", { station: id });
-    drafts.push({ id, gpio, stream: streamResponse.stream });
+  for (let index = 0; index < DEFAULT_STATIONS.length; index += 1) {
+    const identityResponse = await command("get_slot", { index, part: "identity" });
+    const streamResponse = await command("get_slot", { index, part: "stream" });
+    drafts.push({ ...identityResponse.slot, stream: streamResponse.stream });
   }
   stationDrafts = drafts;
   elements.accessCode.value = hardwareResponse.code || "";
-  renderStreams();
-  renderHardware();
+  renderStations();
   advancedLoaded = true;
 }
 
@@ -431,10 +407,10 @@ async function openAdvancedSettings() {
   elements.advancedSettings.scrollIntoView({ behavior: "smooth", block: "start" });
   if (advancedLoaded) return;
   setBusy(elements.advancedButton, true, "Loading…");
-  showMessage("Loading the radio’s current station list over Bluetooth…", "working");
+  showMessage("Loading all ten fixed dial positions over Bluetooth…", "working");
   try {
     await loadAdvancedSettings();
-    showMessage(`Loaded ${stationDrafts.length} station(s).`, "success");
+    showMessage("The fixed dial layout is ready to edit.", "success");
   } catch (error) {
     showMessage(error.message, "error");
   } finally {
@@ -442,81 +418,24 @@ async function openAdvancedSettings() {
   }
 }
 
-function collectStreams() {
-  const streams = {};
-  for (const input of elements.streamFields.querySelectorAll("input[data-station]")) {
-    streams[input.dataset.station] = input.value.trim();
-  }
-  return streams;
-}
-
-async function updateStreams(streams, button, progressText) {
-  setBusy(button, true, progressText);
-  showMessage("Saving stream links and restarting radio playback…", "working");
-  try {
-    await command("update_streams", { streams }, 35000);
-    stationDrafts = stationDrafts.map(station => ({ ...station, stream: streams[station.id] }));
-    renderStreams();
-    renderHardware();
-    showMessage("Stream links saved. Radio playback restarted with the selected station.", "success");
-  } catch (error) {
-    showMessage(error.message, "error");
-  } finally {
-    setBusy(button, false);
-  }
-}
-
-async function saveStreams(event) {
-  event.preventDefault();
-  await updateStreams(collectStreams(), elements.saveStreamsButton, "Saving…");
-}
-
-async function resetStreams() {
-  if (!confirm("Reset the original dial positions to their default stream links? Custom extra stations keep their current links.")) return;
-  const currentStreams = collectStreams();
-  const streams = {};
-  stationDrafts.forEach((station, index) => {
-    streams[station.id] = DEFAULT_STATIONS[index]?.stream || currentStreams[station.id] || station.stream;
+function collectStations() {
+  return stationDrafts.map((station, index) => {
+    const id = elements.stationFields.querySelector(`[data-field="id"][data-index="${index}"]`).value.trim();
+    const stream = elements.stationFields.querySelector(`[data-field="stream"][data-index="${index}"]`).value.trim();
+    return { gpio: station.gpio, pin: station.pin, id, stream: id ? stream : "" };
   });
-  await updateStreams(streams, elements.resetStreamsButton, "Resetting…");
 }
 
-function syncStreamsFromAdvancedForm() {
-  for (const input of elements.streamFields.querySelectorAll("input[data-index]")) {
-    const index = Number.parseInt(input.dataset.index, 10);
-    if (stationDrafts[index]) stationDrafts[index].stream = input.value.trim();
-  }
-}
-
-function collectStationLayout() {
-  return stationDrafts.map((station, index) => ({
-    id: elements.gpioFields.querySelector(`[data-field="id"][data-index="${index}"]`).value.trim(),
-    gpio: Number.parseInt(elements.gpioFields.querySelector(`[data-field="gpio"][data-index="${index}"]`).value, 10),
-    stream: elements.gpioFields.querySelector(`[data-field="stream"][data-index="${index}"]`).value.trim(),
-  }));
-}
-
-function syncDraftsFromHardwareForm() {
-  if (elements.gpioFields.querySelector("[data-field=\"id\"]")) {
-    stationDrafts = collectStationLayout();
-  }
-}
-
-function validateStationLayout(stations) {
-  if (!stations.length || stations.length > MAX_STATIONS) return "Configure between 1 and 12 stations.";
-  const ids = stations.map(station => station.id.toLowerCase());
-  if (stations.some(station => !/^[A-Za-z0-9_-]{1,16}$/.test(station.id))) {
-    return "Each station ID must be 1–16 letters, numbers, hyphens, or underscores.";
-  }
-  if (new Set(ids).size !== ids.length) return "Every station ID must be unique, even when letter case differs.";
-  const pins = stations.map(station => station.gpio);
-  if (pins.some(pin => !Number.isInteger(pin) || pin < 2 || pin > 27) || new Set(pins).size !== pins.length) {
-    return "Every station must use a unique BCM pin from 2 to 27.";
-  }
+function validateStations(stations) {
+  const usedIds = new Set();
   for (const station of stations) {
+    if (!station.id) continue;
+    const folded = station.id.toLocaleLowerCase();
+    if (usedIds.has(folded)) return `Character ID “${station.id}” is duplicated.`;
+    usedIds.add(folded);
     try {
       const url = new URL(station.stream);
-      if (!["http:", "https:"].includes(url.protocol) || station.stream.length > 350) throw new Error();
+      if (!["http:", "https:"].includes(url.protocol) || station.stream.length > 300) throw new Error();
     } catch (_) {
       return `${station.id} needs a valid HTTP or HTTPS stream URL.`;
     }
@@ -524,55 +443,19 @@ function validateStationLayout(stations) {
   return "";
 }
 
-function removeStation(index) {
-  if (stationDrafts.length <= 1) return;
-  syncDraftsFromHardwareForm();
-  stationDrafts.splice(index, 1);
-  renderStreams();
-  renderHardware();
-}
-
-function addStation() {
-  if (stationDrafts.length >= MAX_STATIONS) return;
-  syncDraftsFromHardwareForm();
-  const usedPins = new Set(stationDrafts.map(station => Number(station.gpio)));
-  const gpio = Array.from({ length: 26 }, (_, index) => index + 2).find(pin => !usedPins.has(pin));
-  let suffix = 1;
-  const usedIds = new Set(stationDrafts.map(station => station.id.toLowerCase()));
-  while (usedIds.has(`new${suffix}`)) suffix += 1;
-  stationDrafts.push({ id: `NEW${suffix}`, gpio, stream: "" });
-  renderStreams();
-  renderHardware();
-  elements.gpioFields.lastElementChild?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-}
-
-async function updateStations(code, stations, button, progressText) {
-  const normalizedCode = code.trim().toLowerCase();
-  if (!/^[a-z0-9]{8}$/.test(normalizedCode)) {
-    showMessage("The access code must be exactly eight lowercase letters or numbers.", "error");
-    return;
-  }
-  const validationError = validateStationLayout(stations);
+async function updateStationSlots(stations, button, progressText, successText) {
+  const validationError = validateStations(stations);
   if (validationError) {
     showMessage(validationError, "error");
     return;
   }
-
   setBusy(button, true, progressText);
-  showMessage("Validating the station layout and safely restarting the radio services…", "working");
+  showMessage("Validating the station IDs and restarting the dial and playback services…", "working");
   try {
-    const previousCode = setupToken;
-    const response = await command("update_stations", { code: normalizedCode, stations }, 50000);
+    await command("update_slots", { stations, code: setupToken }, 50000);
     stationDrafts = stations.map(station => ({ ...station }));
-    elements.accessCode.value = response.code;
-    renderStreams();
-    renderHardware();
-    if (response.code !== previousCode) {
-      expectedDisconnectMessage = `Access code changed. Bluetooth is restarting; reconnect to ${response.bluetooth_name}. The new code will fill automatically.`;
-      showMessage(`Saved. Bluetooth will restart as ${response.bluetooth_name} in a few seconds.`, "success");
-    } else {
-      showMessage(`${stations.length} station(s) saved. GPIO and playback restarted successfully.`, "success");
-    }
+    renderStations();
+    showMessage(successText, "success");
   } catch (error) {
     showMessage(error.message, "error");
   } finally {
@@ -580,47 +463,73 @@ async function updateStations(code, stations, button, progressText) {
   }
 }
 
-async function saveHardware(event) {
+async function saveStations(event) {
   event.preventDefault();
-  const stations = collectStationLayout();
-  await updateStations(elements.accessCode.value, stations, elements.saveHardwareButton, "Saving…");
+  await updateStationSlots(collectStations(), elements.saveStationsButton, "Saving…", "Station IDs and streams saved. The current dial position was read again.");
 }
 
-async function reloadAdvancedAfterReset() {
-  advancedLoaded = false;
-  await loadAdvancedSettings();
+async function resetStreams() {
+  if (!confirm("Restore the original stream links for the first five dial positions? Custom links on the other positions are preserved.")) return;
+  const stations = collectStations();
+  stations.forEach((station, index) => {
+    if (index < 5) station.stream = station.id ? DEFAULT_STATIONS[index].stream : "";
+  });
+  await updateStationSlots(stations, elements.resetStreamsButton, "Resetting…", "Preset stream links restored. Character IDs were not changed.");
 }
 
-async function resetGpioLayout() {
-  if (!confirm("Restore the original five station IDs and BCM pins? Stream links are kept by dial position, and the Bluetooth code is not changed.")) return;
-  setBusy(elements.resetGpioButton, true, "Resetting…");
-  showMessage("Restoring the original station IDs and GPIO layout…", "working");
+async function resetIds() {
+  if (!confirm("Restore SFM, OFM, RSG, ALGUA, and LEK on the first five positions and clear the other five IDs?")) return;
+  setBusy(elements.resetIdsButton, true, "Resetting…");
+  showMessage("Restoring the preset character IDs…", "working");
   try {
-    await command("reset_gpio", {}, 50000);
-    await reloadAdvancedAfterReset();
-    showMessage("GPIO layout reset. Stream links and Bluetooth code were preserved.", "success");
+    await command("reset_ids", {}, 50000);
+    await loadAdvancedSettings();
+    showMessage("Character ID presets restored. The first five stream links were preserved.", "success");
   } catch (error) {
     showMessage(error.message, "error");
   } finally {
-    setBusy(elements.resetGpioButton, false);
+    setBusy(elements.resetIdsButton, false);
+  }
+}
+
+async function saveAccessCode(event) {
+  event.preventDefault();
+  const code = elements.accessCode.value.trim().toLowerCase();
+  if (!/^[a-z0-9]{8}$/.test(code)) {
+    showMessage("The Bluetooth code must be exactly eight lowercase letters or numbers.", "error");
+    return;
+  }
+  setBusy(elements.saveAccessButton, true, "Saving…");
+  showMessage("Saving the Bluetooth access code…", "working");
+  try {
+    const response = await command("update_access_code", { code }, 35000);
+    if (response.code !== setupToken) {
+      expectedDisconnectMessage = `Bluetooth is restarting; reconnect to ${response.bluetooth_name}. The new code will fill automatically.`;
+      showMessage(`Saved. Bluetooth will restart as ${response.bluetooth_name}.`, "success");
+    } else {
+      showMessage("Bluetooth access code is unchanged.", "success");
+    }
+  } catch (error) {
+    showMessage(error.message, "error");
+  } finally {
+    setBusy(elements.saveAccessButton, false);
   }
 }
 
 async function factoryReset() {
-  if (!confirm("Factory-reset station IDs, BCM pins, stream links, and the Bluetooth/access code? Saved Wi-Fi networks will NOT be erased.")) return;
-  if (!confirm("This restores every RadioLink setting to its original value. Continue?")) return;
+  if (!confirm("Factory-reset all character IDs, stream links, and the Bluetooth code? Saved Wi-Fi networks will NOT be erased.")) return;
+  if (!confirm("Restore every original RadioLink value now?")) return;
   setBusy(elements.factoryResetButton, true, "Factory resetting…");
   showMessage("Restoring all original radio settings…", "working");
   try {
     const previousCode = setupToken;
-    const response = await command("factory_reset", {}, 50000);
+    await command("factory_reset", {}, 50000);
     stationDrafts = DEFAULT_STATIONS.map(station => ({ ...station }));
     elements.accessCode.value = DEFAULT_ACCESS_CODE;
-    renderStreams();
-    renderHardware();
+    renderStations();
     if (previousCode !== DEFAULT_ACCESS_CODE) {
       expectedDisconnectMessage = `Factory reset complete. Bluetooth is restarting; reconnect to Radio-${DEFAULT_ACCESS_CODE}.`;
-      showMessage(`Factory reset complete. Bluetooth will restart as Radio-${DEFAULT_ACCESS_CODE}. Saved Wi-Fi was preserved.`, "success");
+      showMessage(`Factory reset complete. Bluetooth will restart as Radio-${DEFAULT_ACCESS_CODE}; saved Wi-Fi was preserved.`, "success");
     } else {
       showMessage("Factory reset complete. All radio defaults restored; saved Wi-Fi was preserved.", "success");
     }
@@ -641,17 +550,14 @@ elements.scanButton.addEventListener("click", scanNetworks);
 elements.wifiForm.addEventListener("submit", saveWifi);
 elements.advancedButton.addEventListener("click", openAdvancedSettings);
 elements.closeAdvancedButton.addEventListener("click", () => { elements.advancedSettings.hidden = true; });
-elements.streamsForm.addEventListener("submit", saveStreams);
+elements.stationsForm.addEventListener("submit", saveStations);
 elements.resetStreamsButton.addEventListener("click", resetStreams);
+elements.resetIdsButton.addEventListener("click", resetIds);
 elements.superAdvancedButton.addEventListener("click", () => {
-  if (elements.superAdvancedSettings.hidden) syncStreamsFromAdvancedForm();
   elements.superAdvancedSettings.hidden = !elements.superAdvancedSettings.hidden;
-  if (!elements.superAdvancedSettings.hidden) renderHardware();
   if (!elements.superAdvancedSettings.hidden) elements.superAdvancedSettings.scrollIntoView({ behavior: "smooth", block: "nearest" });
 });
-elements.hardwareForm.addEventListener("submit", saveHardware);
-elements.addStationButton.addEventListener("click", addStation);
-elements.resetGpioButton.addEventListener("click", resetGpioLayout);
+elements.accessForm.addEventListener("submit", saveAccessCode);
 elements.factoryResetButton.addEventListener("click", factoryReset);
 elements.debugButton.addEventListener("click", () => showDiagnostics());
 

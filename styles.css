@@ -313,46 +313,32 @@ small { display: block; margin-top: 7px; color: #718093; }
 .super-settings { margin-top: 22px; }
 .super-settings h3 { margin: 27px 0 8px; font-size: 1.05rem; }
 
-.station-heading {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 18px;
-  margin-top: 28px;
-}
-
-.station-heading h3 { margin: 0 0 4px; }
-.station-heading .secondary-button { min-height: 46px; flex: 0 0 auto; }
-
 .station-list { display: grid; gap: 14px; margin-top: 16px; }
 
-.station-card {
-  display: grid;
-  grid-template-columns: minmax(120px, .65fr) minmax(105px, .45fr) minmax(220px, 1.7fr) auto;
-  align-items: end;
-  gap: 10px 12px;
+.fixed-station-card {
   margin: 0;
-  padding: 14px;
+  padding: 15px 16px 17px;
   border: 1px solid var(--line);
-  border-radius: 15px;
-  background: #f7faf9;
+  border-radius: 17px;
+  background: linear-gradient(135deg, #f8fbfa, #f1f6f5);
 }
 
-.station-card legend { padding: 0 7px; color: var(--teal); font-size: .78rem; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; }
-.station-card label { margin: 0 0 5px; font-size: .78rem; }
-.station-card input { min-height: 46px; }
+.fixed-station-card.empty { border-style: dashed; background: #fafafa; }
+.fixed-station-card legend { padding: 0 8px; color: var(--teal); font-size: .78rem; font-weight: 900; letter-spacing: .055em; text-transform: uppercase; }
 
-.remove-station-button {
-  min-height: 46px;
-  padding: 9px 12px;
-  border: 1px solid #e5b3b3;
-  border-radius: 12px;
-  color: #9b3333;
-  background: #fff;
-  font-weight: 800;
+.pin-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 12px;
 }
 
-.remove-station-button:disabled { opacity: .45; cursor: not-allowed; }
+.pin-strip span { padding: 5px 9px; border-radius: 999px; color: #34526a; background: #e5edef; font-size: .74rem; font-weight: 900; letter-spacing: .025em; }
+.pin-strip span:first-child { color: #126e69; background: #dff2ef; }
+
+.station-field-grid { display: grid; grid-template-columns: minmax(160px, .65fr) minmax(260px, 1.7fr); gap: 12px; }
+.station-field-grid label { margin: 0 0 6px; font-size: .79rem; }
+.station-field-grid input { min-height: 48px; }
 
 .factory-zone {
   display: flex;
@@ -406,11 +392,10 @@ footer {
   footer { flex-direction: column; }
   .advanced-launcher { align-items: stretch; flex-direction: column; }
   .advanced-button { width: 100%; }
-  .station-heading, .factory-zone { align-items: stretch; flex-direction: column; }
-  .station-card { grid-template-columns: 1fr 1fr; }
-  .station-card label:nth-of-type(3), .station-card input[data-field="stream"], .remove-station-button { grid-column: 1 / -1; }
+  .factory-zone { align-items: stretch; flex-direction: column; }
+  .station-field-grid { grid-template-columns: 1fr; }
   .button-row { align-items: stretch; flex-direction: column-reverse; }
-  .button-row button, .station-heading button, .factory-zone button { width: 100%; }
+  .button-row button, .factory-zone button { width: 100%; }
 }
 
 @media (max-width: 430px) {
@@ -418,6 +403,4 @@ footer {
   .status-chip { align-self: flex-start; }
   .inline-form { grid-template-columns: 1fr; }
   .secondary-button { min-height: 50px; }
-  .station-card { grid-template-columns: 1fr; }
-  .station-card > * { grid-column: 1 !important; }
 }
