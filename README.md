@@ -64,6 +64,13 @@ local gateway page closes the temporary hotspot, lets the phone return to its no
 internet connection, and redirects to `https://radio.jorda.co.za/`. Wi-Fi details are
 then configured over Bluetooth from the published RadioLink page.
 
+ESP32 firmware 0.2.0 and newer advertises optional playback capabilities. For those
+radios the dashboard shows a playback panel that can force one of the ten dial
+positions, force silence, return to the physical dial, or play a short test chime.
+A forced selection remains active until the physical dial moves to a different
+position. Radios that do not advertise these capabilities—including existing
+Raspberry Pi installations—never show the panel and receive no new commands.
+
 ## If Bluetooth permission is blocked
 
 On the published page, tap the site-information icon beside the Chrome address,
