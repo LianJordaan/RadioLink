@@ -1,7 +1,7 @@
 # RadioLink
 
-RadioLink is a static GitHub Pages interface for configuring the Raspberry Pi
-internet radio directly over Bluetooth Low Energy. No application install or web
+RadioLink is a static GitHub Pages interface for configuring Raspberry Pi and ESP32
+internet radios directly over Bluetooth Low Energy. No application install or web
 server on the radio is required.
 
 ## Suggested repository name
@@ -38,10 +38,10 @@ sent to GitHub Pages and is not stored by this site.
 ## Advanced settings
 
 The **Advanced settings** section shows ten fixed physical dial positions. Every card
-shows its BCM GPIO number and Raspberry Pi physical header-pin number. Users can edit
-the character ID and stream URL, but cannot add positions, remove positions, or alter
-the wiring map. Blank IDs represent unused dial positions. Non-empty IDs must be
-unique, including uppercase/lowercase differences.
+shows the connected device's GPIO wiring; Raspberry Pi radios also show the physical
+header-pin number. Users can edit the character ID and stream URL, but cannot add
+positions, remove positions, or alter the wiring map. Blank IDs represent unused dial
+positions. Non-empty IDs must be unique regardless of uppercase/lowercase differences.
 
 **Reset character IDs** restores `SFM`, `OFM`, `RSG`, `ALGUA`, and `LEK` on the
 first five positions and clears the remaining five IDs while preserving the first

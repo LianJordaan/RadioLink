@@ -265,6 +265,36 @@ small { display: block; margin-top: 7px; color: #718093; }
 .quiet-button { padding: 9px 13px; color: var(--teal); background: var(--teal-pale); }
 .save-button { width: 100%; margin-top: 26px; }
 
+.playback-control-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.playback-control-grid label { margin-top: 0; }
+.playback-control-grid .primary-button { min-height: 52px; padding: 0 20px; }
+
+.playback-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.playback-actions button { min-height: 45px; padding: 9px 14px; }
+
+.playback-state {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border-radius: 13px;
+  color: var(--navy-soft);
+  background: #f1f5f4;
+  font-size: .92rem;
+  font-weight: 700;
+}
+
 .advanced-launcher {
   display: flex;
   align-items: center;
@@ -409,6 +439,8 @@ footer {
   footer { flex-direction: column; }
   .advanced-launcher { align-items: stretch; flex-direction: column; }
   .advanced-button { width: 100%; }
+  .playback-control-grid { grid-template-columns: 1fr; }
+  .playback-control-grid .primary-button { width: 100%; }
   .factory-zone { align-items: stretch; flex-direction: column; }
   .station-field-grid { grid-template-columns: 1fr; }
   .button-row { align-items: stretch; flex-direction: column-reverse; }

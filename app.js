@@ -30,6 +30,12 @@ const elements = {
   ipAddress: document.querySelector("#ip-address"),
   stationName: document.querySelector("#station-name"),
   refreshButton: document.querySelector("#refresh-button"),
+  playbackPanel: document.querySelector("#playback-panel"),
+  playbackPosition: document.querySelector("#playback-position"),
+  applyPlaybackButton: document.querySelector("#apply-playback-button"),
+  testSoundButton: document.querySelector("#test-sound-button"),
+  followDialButton: document.querySelector("#follow-dial-button"),
+  playbackOverrideState: document.querySelector("#playback-override-state"),
   scanButton: document.querySelector("#scan-button"),
   networkSelect: document.querySelector("#network-select"),
   manualSsid: document.querySelector("#manual-ssid"),
@@ -63,6 +69,7 @@ let requestId = 0;
 let advancedLoaded = false;
 let expectedDisconnectMessage = "";
 let stationDrafts = [];
+let hardwareInfo = {};
 
 function delay(milliseconds) {
   return new Promise(resolve => setTimeout(resolve, milliseconds));
@@ -88,6 +95,8 @@ function setConnected(connected) {
     commandCharacteristic = null;
     responseCharacteristic = null;
     advancedLoaded = false;
+    hardwareInfo = {};
+    elements.playbackPanel.hidden = true;
     elements.advancedSettings.hidden = true;
     elements.advancedLoading.hidden = true;
   }
@@ -169,7 +178,15 @@ async function connectRadio() {
     elements.deviceName.textContent = device.name || "RadioLink radio";
     setConnected(true);
     showMessage("Radio connected. Loading its status and nearby Wi-Fi networks…", "working");
-    renderStatus(await command("status"));
+    const initialStatus = await command("status");
+    renderStatus(initialStatus);
+    try {
+      hardwareInfo = await command("get_hardware");
+    } catch (_) {
+      hardwareInfo = {};
+    }
+    configurePlaybackControls();
+    renderPlaybackState(initialStatus);
     elements.dashboard.hidden = false;
     await scanNetworks();
   } catch (error) {
@@ -234,7 +251,101 @@ function renderStatus(status) {
   elements.radioName.textContent = status.device || device?.name || "Your radio";
   elements.wifiStatus.textContent = status.wifi ? (status.connection || "Connected") : "Not connected";
   elements.ipAddress.textContent = status.ip || "No address";
-  elements.stationName.textContent = status.station || "Nothing selected";
+  elements.stationName.textContent = status.selection_source === "remote_silence"
+    ? "Silenced"
+    : (status.station || "Nothing selected");
+  renderPlaybackState(status);
+}
+
+function configurePlaybackControls() {
+  const capabilities = hardwareInfo.capabilities || {};
+  const supported = capabilities.playback_override === true;
+  elements.playbackPanel.hidden = !supported;
+  elements.testSoundButton.hidden = capabilities.test_sound !== true;
+  if (supported) refreshPlaybackOptions();
+}
+
+function refreshPlaybackOptions() {
+  const previous = elements.playbackPosition.value || "0";
+  elements.playbackPosition.replaceChildren(new Option("Silence / deselect", "silence"));
+  for (let index = 0; index < DEFAULT_STATIONS.length; index += 1) {
+    const station = stationDrafts[index];
+    const fallback = DEFAULT_STATIONS[index].id || "Empty position";
+    const suffix = station ? (station.id || "Empty position") : fallback;
+    elements.playbackPosition.add(new Option(`Dial position ${index + 1} · ${suffix}`, String(index)));
+  }
+  const stillExists = [...elements.playbackPosition.options].some(option => option.value === previous);
+  elements.playbackPosition.value = stillExists ? previous : "0";
+}
+
+function renderPlaybackState(status) {
+  if (elements.playbackPanel.hidden) return;
+  if (status.remote_override && status.selected_position == null) {
+    elements.playbackOverrideState.textContent = "Forced silence is active. Moving the physical dial to a different position will resume playback.";
+  } else if (status.remote_override) {
+    elements.playbackOverrideState.textContent = `Position ${status.selected_position} is forced from the site. Moving the physical dial will take control again.`;
+  } else if (status.physical_position != null) {
+    elements.playbackOverrideState.textContent = `Following the physical dial at position ${status.physical_position}.`;
+  } else if (status.selected_position != null) {
+    elements.playbackOverrideState.textContent = `No physical dial position is detected. Using stored position ${status.selected_position}.`;
+  } else {
+    elements.playbackOverrideState.textContent = "Following the radio's normal selection.";
+  }
+}
+
+function setPlaybackButtonsBusy(busy, activeButton = null, busyText = "Working…") {
+  for (const button of [elements.applyPlaybackButton, elements.testSoundButton, elements.followDialButton]) {
+    if (button === activeButton) setBusy(button, busy, busyText);
+    else button.disabled = busy;
+  }
+}
+
+async function applyPlaybackOverride() {
+  const value = elements.playbackPosition.value;
+  const payload = value === "silence"
+    ? { mode: "silence" }
+    : { mode: "station", index: Number(value) };
+  setPlaybackButtonsBusy(true, elements.applyPlaybackButton, "Switching…");
+  showMessage(value === "silence" ? "Silencing the radio…" : `Switching to dial position ${Number(value) + 1}…`, "working");
+  try {
+    const response = await command("set_playback", payload, 35000);
+    renderStatus(response);
+    showMessage(value === "silence"
+      ? "Playback is silenced until the physical dial moves or Follow physical dial is selected."
+      : `Dial position ${Number(value) + 1} is now forced until the physical dial moves.`, "success");
+  } catch (error) {
+    showMessage(error.message, "error");
+  } finally {
+    setPlaybackButtonsBusy(false, elements.applyPlaybackButton);
+  }
+}
+
+async function followPhysicalDial() {
+  setPlaybackButtonsBusy(true, elements.followDialButton, "Switching…");
+  showMessage("Returning control to the physical dial…", "working");
+  try {
+    const response = await command("set_playback", { mode: "follow_dial" }, 35000);
+    renderStatus(response);
+    showMessage("The radio is following its physical dial again.", "success");
+  } catch (error) {
+    showMessage(error.message, "error");
+  } finally {
+    setPlaybackButtonsBusy(false, elements.followDialButton);
+  }
+}
+
+async function playTestSound() {
+  setPlaybackButtonsBusy(true, elements.testSoundButton, "Playing…");
+  showMessage("Playing a short test sound through the radio speaker…", "working");
+  try {
+    const response = await command("play_test_sound", {}, 35000);
+    renderStatus(response);
+    showMessage("Test sound started. Normal playback will resume automatically.", "success");
+  } catch (error) {
+    showMessage(error.message, "error");
+  } finally {
+    setPlaybackButtonsBusy(false, elements.testSoundButton);
+  }
 }
 
 async function refreshStatus() {
@@ -314,9 +425,13 @@ function renderStations() {
     const pinStrip = document.createElement("div");
     pinStrip.className = "pin-strip";
     const gpioBadge = document.createElement("span");
-    gpioBadge.textContent = `BCM GPIO ${station.gpio}`;
+    gpioBadge.textContent = hardwareInfo.platform === "esp32"
+      ? `ESP32 GPIO ${station.gpio}`
+      : `BCM GPIO ${station.gpio}`;
     const physicalBadge = document.createElement("span");
-    physicalBadge.textContent = `Physical pin ${station.pin}`;
+    physicalBadge.textContent = hardwareInfo.platform === "esp32"
+      ? (hardwareInfo.board || "ESP32 board")
+      : `Physical pin ${station.pin}`;
     pinStrip.append(gpioBadge, physicalBadge);
 
     const fields = document.createElement("div");
@@ -370,6 +485,7 @@ async function loadAdvancedSettings() {
   elements.advancedLoading.hidden = false;
   setAdvancedProgress(0, totalItems, "Reading device identity…");
   const hardwareResponse = await command("get_hardware");
+  hardwareInfo = hardwareResponse;
   setAdvancedProgress(1, totalItems, "Device identity loaded. Reading dial position 1 of 10…");
   const drafts = [];
   for (let index = 0; index < DEFAULT_STATIONS.length; index += 1) {
@@ -392,6 +508,7 @@ async function loadAdvancedSettings() {
   stationDrafts = drafts;
   elements.accessCode.value = hardwareResponse.code || "";
   renderStations();
+  refreshPlaybackOptions();
   advancedLoaded = true;
   setTimeout(() => {
     if (advancedLoaded) elements.advancedLoading.hidden = true;
@@ -451,6 +568,7 @@ async function updateStationSlots(stations, button, progressText, successText) {
     await command("update_slots", { stations }, 50000);
     stationDrafts = stations.map(station => ({ ...station }));
     renderStations();
+    refreshPlaybackOptions();
     showMessage(successText, "success");
   } catch (error) {
     showMessage(error.message, "error");
@@ -517,9 +635,16 @@ async function factoryReset() {
   try {
     const previousCode = elements.accessCode.value.trim().toLowerCase();
     await command("factory_reset", {}, 50000);
-    stationDrafts = DEFAULT_STATIONS.map(station => ({ ...station }));
+    // Preserve the connected device's fixed hardware map. Raspberry Pi and
+    // ESP32 radios use different GPIOs even though their station defaults match.
+    stationDrafts = stationDrafts.map((station, index) => ({
+      ...station,
+      id: DEFAULT_STATIONS[index].id,
+      stream: DEFAULT_STATIONS[index].stream,
+    }));
     elements.accessCode.value = DEFAULT_ACCESS_CODE;
     renderStations();
+    refreshPlaybackOptions();
     if (previousCode !== DEFAULT_ACCESS_CODE) {
       expectedDisconnectMessage = `Factory reset complete. Bluetooth is restarting; reconnect to Radio-${DEFAULT_ACCESS_CODE}.`;
       showMessage(`Factory reset complete. Bluetooth will restart as Radio-${DEFAULT_ACCESS_CODE}; saved Wi-Fi was preserved.`, "success");
@@ -535,6 +660,9 @@ async function factoryReset() {
 
 elements.connectButton.addEventListener("click", connectRadio);
 elements.refreshButton.addEventListener("click", refreshStatus);
+elements.applyPlaybackButton.addEventListener("click", applyPlaybackOverride);
+elements.testSoundButton.addEventListener("click", playTestSound);
+elements.followDialButton.addEventListener("click", followPhysicalDial);
 elements.scanButton.addEventListener("click", scanNetworks);
 elements.wifiForm.addEventListener("submit", saveWifi);
 elements.advancedButton.addEventListener("click", openAdvancedSettings);

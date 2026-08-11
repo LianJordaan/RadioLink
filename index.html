@@ -91,6 +91,30 @@
         </div>
       </section>
 
+      <section id="playback-panel" class="panel playback-panel" hidden>
+        <div class="panel-heading">
+          <div>
+            <p class="step">Playback control</p>
+            <h2>Test or override the dial</h2>
+          </div>
+        </div>
+        <p class="supporting">Choose a dial position even when the physical selector is not wired. An override stays active until the dial physically moves to a different position.</p>
+        <div class="playback-control-grid">
+          <div>
+            <label for="playback-position">Temporary selection</label>
+            <select id="playback-position">
+              <option value="silence">Silence / deselect</option>
+            </select>
+          </div>
+          <button id="apply-playback-button" class="primary-button" type="button">Use selection</button>
+        </div>
+        <div class="playback-actions">
+          <button id="test-sound-button" class="secondary-button" type="button">Play test sound</button>
+          <button id="follow-dial-button" class="quiet-button" type="button">Follow physical dial</button>
+        </div>
+        <p id="playback-override-state" class="playback-state">Following the radio's normal selection.</p>
+      </section>
+
       <section class="panel setup-panel">
         <div class="panel-heading">
           <div>
@@ -135,7 +159,7 @@
           </div>
           <button id="close-advanced-button" class="icon-button" type="button" aria-label="Close advanced settings">×</button>
         </div>
-        <p class="supporting">The wiring is fixed. Each card shows its BCM GPIO and matching physical header pin; only the character ID and stream link can be edited. Leave both fields empty for an unused position.</p>
+        <p class="supporting">The wiring is fixed. Each card shows its device-specific GPIO wiring and, where applicable, its physical header pin; only the character ID and stream link can be edited. Leave both fields empty for an unused position.</p>
 
         <div id="advanced-loading" class="advanced-loading" hidden>
           <div class="loading-heading">
