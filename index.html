@@ -115,6 +115,32 @@
         <p id="playback-override-state" class="playback-state">Following the radio's normal selection.</p>
       </section>
 
+      <section id="volume-panel" class="panel volume-panel" hidden>
+        <div class="panel-heading">
+          <div>
+            <p class="step">Audio output</p>
+            <h2>Radio volume</h2>
+          </div>
+          <strong id="volume-readout" class="volume-readout">100%</strong>
+        </div>
+        <p class="supporting">Drag the slider for quick changes, or enter an exact whole-number percentage.</p>
+        <div class="volume-control-grid">
+          <div class="volume-slider-wrap">
+            <label for="volume-slider">Output level</label>
+            <input id="volume-slider" type="range" min="0" max="100" step="1" value="100">
+          </div>
+          <div class="volume-number-wrap">
+            <label for="volume-number">Exact value</label>
+            <div class="volume-number-field">
+              <input id="volume-number" type="number" min="0" max="100" step="1" value="100" inputmode="numeric">
+              <span aria-hidden="true">%</span>
+            </div>
+          </div>
+          <button id="save-volume-button" class="primary-button" type="button">Save volume</button>
+        </div>
+        <small>The saved value is used again after the radio restarts.</small>
+      </section>
+
       <section class="panel setup-panel">
         <div class="panel-heading">
           <div>

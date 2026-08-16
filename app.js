@@ -36,6 +36,11 @@ const elements = {
   testSoundButton: document.querySelector("#test-sound-button"),
   followDialButton: document.querySelector("#follow-dial-button"),
   playbackOverrideState: document.querySelector("#playback-override-state"),
+  volumePanel: document.querySelector("#volume-panel"),
+  volumeSlider: document.querySelector("#volume-slider"),
+  volumeNumber: document.querySelector("#volume-number"),
+  volumeReadout: document.querySelector("#volume-readout"),
+  saveVolumeButton: document.querySelector("#save-volume-button"),
   scanButton: document.querySelector("#scan-button"),
   networkSelect: document.querySelector("#network-select"),
   manualSsid: document.querySelector("#manual-ssid"),
@@ -97,6 +102,7 @@ function setConnected(connected) {
     advancedLoaded = false;
     hardwareInfo = {};
     elements.playbackPanel.hidden = true;
+    elements.volumePanel.hidden = true;
     elements.advancedSettings.hidden = true;
     elements.advancedLoading.hidden = true;
   }
@@ -186,6 +192,7 @@ async function connectRadio() {
       hardwareInfo = {};
     }
     configurePlaybackControls();
+    configureVolumeControls();
     renderPlaybackState(initialStatus);
     elements.dashboard.hidden = false;
     await scanNetworks();
@@ -263,6 +270,49 @@ function configurePlaybackControls() {
   elements.playbackPanel.hidden = !supported;
   elements.testSoundButton.hidden = capabilities.test_sound !== true;
   if (supported) refreshPlaybackOptions();
+}
+
+function parseVolume(value) {
+  const text = String(value).trim();
+  if (!/^\d+$/.test(text)) return null;
+  const volume = Number(text);
+  return Number.isInteger(volume) && volume >= 0 && volume <= 100 ? volume : null;
+}
+
+function renderVolume(value) {
+  const volume = parseVolume(value);
+  if (volume === null) return;
+  elements.volumeSlider.value = String(volume);
+  elements.volumeNumber.value = String(volume);
+  elements.volumeReadout.textContent = `${volume}%`;
+}
+
+function configureVolumeControls() {
+  const capabilities = hardwareInfo.capabilities || {};
+  const supported = capabilities.volume === true && parseVolume(hardwareInfo.volume) !== null;
+  elements.volumePanel.hidden = !supported;
+  if (supported) renderVolume(hardwareInfo.volume);
+}
+
+async function saveVolume() {
+  const volume = parseVolume(elements.volumeNumber.value);
+  if (volume === null) {
+    showMessage("Volume must be a whole number from 0 to 100.", "error");
+    elements.volumeNumber.focus();
+    return;
+  }
+  setBusy(elements.saveVolumeButton, true, "Saving…");
+  showMessage(`Saving volume at ${volume}% and restarting audio…`, "working");
+  try {
+    const response = await command("set_volume", { volume }, 35000);
+    renderVolume(response.volume);
+    hardwareInfo.volume = response.volume;
+    showMessage(`Volume saved at ${response.volume}%. Playback has restarted with the new level.`, "success");
+  } catch (error) {
+    showMessage(error.message, "error");
+  } finally {
+    setBusy(elements.saveVolumeButton, false);
+  }
 }
 
 function refreshPlaybackOptions() {
@@ -663,6 +713,19 @@ elements.refreshButton.addEventListener("click", refreshStatus);
 elements.applyPlaybackButton.addEventListener("click", applyPlaybackOverride);
 elements.testSoundButton.addEventListener("click", playTestSound);
 elements.followDialButton.addEventListener("click", followPhysicalDial);
+elements.volumeSlider.addEventListener("input", () => renderVolume(elements.volumeSlider.value));
+elements.volumeNumber.addEventListener("input", () => {
+  const volume = parseVolume(elements.volumeNumber.value);
+  if (volume !== null) {
+    elements.volumeSlider.value = String(volume);
+    elements.volumeReadout.textContent = `${volume}%`;
+  }
+});
+elements.volumeNumber.addEventListener("change", () => {
+  const volume = parseVolume(elements.volumeNumber.value);
+  if (volume !== null) renderVolume(volume);
+});
+elements.saveVolumeButton.addEventListener("click", saveVolume);
 elements.scanButton.addEventListener("click", scanNetworks);
 elements.wifiForm.addEventListener("submit", saveWifi);
 elements.advancedButton.addEventListener("click", openAdvancedSettings);

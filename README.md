@@ -50,6 +50,11 @@ empty positions, and default device character code. Factory reset deliberately p
 Configuration changes are validated before saving and are rolled back if an affected
 radio service cannot restart cleanly.
 
+Raspberry Pi radios that advertise volume support show a **Radio volume** panel on
+the dashboard. The range slider and exact number box stay synchronized, accept only
+whole percentages from 0 through 100, and save the level across restarts. Older Pi
+and ESP32 firmware simply hide this optional panel.
+
 The bottom of **Advanced settings** edits the device character code used in the
 Bluetooth name, such as `Radio-tester12`. It is an identifier, not a password:
 selecting the radio opens its dashboard automatically. Saving a new code reloads the
