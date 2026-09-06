@@ -36,6 +36,16 @@ const elements = {
   testSoundButton: document.querySelector("#test-sound-button"),
   followDialButton: document.querySelector("#follow-dial-button"),
   playbackOverrideState: document.querySelector("#playback-override-state"),
+  inputDebugPanel: document.querySelector("#input-debug-panel"),
+  inputLiveChip: document.querySelector("#input-live-chip"),
+  inputActive: document.querySelector("#input-active"),
+  inputLast: document.querySelector("#input-last"),
+  inputPolarity: document.querySelector("#input-polarity"),
+  inputDebugWarning: document.querySelector("#input-debug-warning"),
+  inputDebugList: document.querySelector("#input-debug-list"),
+  inputLiveButton: document.querySelector("#input-live-button"),
+  inputRefreshButton: document.querySelector("#input-refresh-button"),
+  inputDebugUpdated: document.querySelector("#input-debug-updated"),
   volumePanel: document.querySelector("#volume-panel"),
   volumeSlider: document.querySelector("#volume-slider"),
   volumeNumber: document.querySelector("#volume-number"),
@@ -75,6 +85,9 @@ let advancedLoaded = false;
 let expectedDisconnectMessage = "";
 let stationDrafts = [];
 let hardwareInfo = {};
+let commandQueue = Promise.resolve();
+let inputDebugRunning = false;
+let inputDebugTimer = null;
 
 function delay(milliseconds) {
   return new Promise(resolve => setTimeout(resolve, milliseconds));
@@ -96,12 +109,15 @@ function setConnected(connected) {
   elements.connectionChip.classList.toggle("connected", connected);
   elements.connectionChip.innerHTML = connected ? "<i></i>Bluetooth connected" : "<i></i>Not connected";
   if (!connected) {
+    stopInputDebug();
     elements.dashboard.hidden = true;
     commandCharacteristic = null;
     responseCharacteristic = null;
+    commandQueue = Promise.resolve();
     advancedLoaded = false;
     hardwareInfo = {};
     elements.playbackPanel.hidden = true;
+    elements.inputDebugPanel.hidden = true;
     elements.volumePanel.hidden = true;
     elements.advancedSettings.hidden = true;
     elements.advancedLoading.hidden = true;
@@ -192,10 +208,12 @@ async function connectRadio() {
       hardwareInfo = {};
     }
     configurePlaybackControls();
+    configureInputDiagnostics();
     configureVolumeControls();
     renderPlaybackState(initialStatus);
     elements.dashboard.hidden = false;
     await scanNetworks();
+    startInputDebug();
   } catch (error) {
     if (error.name === "NotAllowedError" || /permission.*block/i.test(error.message)) {
       await showDiagnostics(error);
@@ -238,7 +256,7 @@ async function readResponse() {
   return JSON.parse(decoder.decode(bytes));
 }
 
-async function command(operation, payload = {}, timeout = 80000) {
+async function executeCommand(operation, payload = {}, timeout = 80000) {
   if (!commandCharacteristic || !responseCharacteristic) throw new Error("Bluetooth is not connected");
   const id = ++requestId;
   await writeCommand({ id, op: operation, ...payload });
@@ -252,6 +270,15 @@ async function command(operation, payload = {}, timeout = 80000) {
     return response;
   }
   throw new Error("The radio took too long to respond");
+}
+
+function command(operation, payload = {}, timeout = 80000) {
+  const pending = commandQueue.then(
+    () => executeCommand(operation, payload, timeout),
+    () => executeCommand(operation, payload, timeout),
+  );
+  commandQueue = pending.catch(() => {});
+  return pending;
 }
 
 function renderStatus(status) {
@@ -270,6 +297,137 @@ function configurePlaybackControls() {
   elements.playbackPanel.hidden = !supported;
   elements.testSoundButton.hidden = capabilities.test_sound !== true;
   if (supported) refreshPlaybackOptions();
+}
+
+function inputDetails(index) {
+  const fixed = DEFAULT_STATIONS[index];
+  const configured = stationDrafts[index];
+  const mapped = Object.entries(hardwareInfo.gpio || {})
+    .find(([, gpio]) => Number(gpio) === fixed.gpio);
+  return {
+    ...fixed,
+    id: configured?.id ?? mapped?.[0] ?? fixed.id,
+  };
+}
+
+function inputName(index) {
+  const input = inputDetails(index);
+  return `Position ${index + 1}${input.id ? ` · ${input.id}` : ""}`;
+}
+
+function configureInputDiagnostics() {
+  const supported = hardwareInfo.capabilities?.gpio_debug === true;
+  elements.inputDebugPanel.hidden = !supported;
+  if (!supported) stopInputDebug();
+}
+
+function renderInputDiagnostics(status) {
+  if (!status.available || !Array.isArray(status.levels) || status.levels.length !== DEFAULT_STATIONS.length) {
+    elements.inputDebugWarning.hidden = false;
+    elements.inputDebugWarning.textContent = "The GPIO monitor has not published a valid reading yet. Restart the GPIO service or try again in a few seconds.";
+    elements.inputDebugUpdated.textContent = "No GPIO reading is available.";
+    return;
+  }
+
+  const active = new Set((status.active || []).map(Number));
+  const last = Number.isInteger(status.last) ? status.last : null;
+  const allLow = status.levels.every(level => Number(level) === 0);
+  const allHigh = status.levels.every(level => Number(level) === 1);
+  elements.inputPolarity.textContent = status.polarity === "active_high" ? "Active-high" : "Active-low";
+  elements.inputActive.textContent = active.size
+    ? [...active].map(inputName).join(", ")
+    : "None";
+  elements.inputLast.textContent = last === null ? "None yet" : inputName(last);
+
+  elements.inputDebugList.replaceChildren();
+  status.levels.forEach((rawLevel, index) => {
+    const details = inputDetails(index);
+    const row = document.createElement("article");
+    row.className = `input-debug-row${active.has(index) ? " active" : ""}`;
+    const identity = document.createElement("div");
+    const title = document.createElement("strong");
+    title.textContent = inputName(index);
+    const pins = document.createElement("small");
+    pins.textContent = `BCM GPIO ${details.gpio} · physical pin ${details.pin}`;
+    identity.append(title, pins);
+    const flags = document.createElement("div");
+    flags.className = "input-debug-flags";
+    const level = document.createElement("span");
+    level.className = Number(rawLevel) ? "level-high" : "level-low";
+    level.textContent = Number(rawLevel) ? "HIGH · 1" : "LOW · 0";
+    flags.append(level);
+    if (active.has(index)) {
+      const activeBadge = document.createElement("span");
+      activeBadge.className = "active-badge";
+      activeBadge.textContent = "Active";
+      flags.append(activeBadge);
+    }
+    if (last === index) {
+      const lastBadge = document.createElement("span");
+      lastBadge.className = "last-badge";
+      lastBadge.textContent = "Last";
+      flags.append(lastBadge);
+    }
+    row.append(identity, flags);
+    elements.inputDebugList.append(row);
+  });
+
+  let warning = "";
+  if (allLow) {
+    warning = "All ten GPIO inputs are LOW. With internal pull-ups enabled, this usually indicates a common-ground/3.3 V short or damaged GPIO circuitry.";
+  } else if (active.size > 1) {
+    warning = `${active.size} inputs look active at once. Check for bridged contacts or switches that remain latched.`;
+  } else if (allHigh && status.polarity === "active_low") {
+    warning = "All inputs are HIGH, so no active-low button or switch is currently selected.";
+  }
+  elements.inputDebugWarning.hidden = !warning;
+  elements.inputDebugWarning.textContent = warning;
+  const age = Math.max(0, Number(status.age) || 0);
+  elements.inputDebugUpdated.textContent = `Bluetooth reading received now · last GPIO event ${age}s ago · ${Number(status.events) || 0} event(s) since the monitor started.`;
+}
+
+async function refreshInputDiagnostics(showButtonBusy = false) {
+  if (showButtonBusy) setBusy(elements.inputRefreshButton, true, "Reading…");
+  try {
+    renderInputDiagnostics(await command("get_gpio_status", {}, 12000));
+  } catch (error) {
+    elements.inputDebugWarning.hidden = false;
+    elements.inputDebugWarning.textContent = `Could not read GPIO inputs: ${error.message}`;
+  } finally {
+    if (showButtonBusy) setBusy(elements.inputRefreshButton, false);
+  }
+}
+
+async function runInputDebugCycle() {
+  if (!inputDebugRunning || !commandCharacteristic) return;
+  await refreshInputDiagnostics(false);
+  if (inputDebugRunning) inputDebugTimer = setTimeout(runInputDebugCycle, 2000);
+}
+
+function startInputDebug() {
+  if (hardwareInfo.capabilities?.gpio_debug !== true || inputDebugRunning) return;
+  inputDebugRunning = true;
+  elements.inputLiveChip.classList.remove("paused");
+  elements.inputLiveChip.innerHTML = "<i></i>Live";
+  elements.inputLiveButton.textContent = "Pause live view";
+  clearTimeout(inputDebugTimer);
+  runInputDebugCycle();
+}
+
+function stopInputDebug() {
+  inputDebugRunning = false;
+  clearTimeout(inputDebugTimer);
+  inputDebugTimer = null;
+  if (elements.inputLiveChip) {
+    elements.inputLiveChip.classList.add("paused");
+    elements.inputLiveChip.innerHTML = "<i></i>Paused";
+  }
+  if (elements.inputLiveButton) elements.inputLiveButton.textContent = "Start live view";
+}
+
+function toggleInputDebug() {
+  if (inputDebugRunning) stopInputDebug();
+  else startInputDebug();
 }
 
 function parseVolume(value) {
@@ -713,6 +871,8 @@ elements.refreshButton.addEventListener("click", refreshStatus);
 elements.applyPlaybackButton.addEventListener("click", applyPlaybackOverride);
 elements.testSoundButton.addEventListener("click", playTestSound);
 elements.followDialButton.addEventListener("click", followPhysicalDial);
+elements.inputLiveButton.addEventListener("click", toggleInputDebug);
+elements.inputRefreshButton.addEventListener("click", () => refreshInputDiagnostics(true));
 elements.volumeSlider.addEventListener("input", () => renderVolume(elements.volumeSlider.value));
 elements.volumeNumber.addEventListener("input", () => {
   const volume = parseVolume(elements.volumeNumber.value);

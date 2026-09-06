@@ -115,6 +115,29 @@
         <p id="playback-override-state" class="playback-state">Following the radio's normal selection.</p>
       </section>
 
+      <section id="input-debug-panel" class="panel input-debug-panel" hidden>
+        <div class="panel-heading">
+          <div>
+            <p class="step">Hardware diagnostics</p>
+            <h2>Buttons and switches</h2>
+          </div>
+          <span id="input-live-chip" class="live-chip"><i></i>Live</span>
+        </div>
+        <p class="supporting">See the electrical level of every configured input. This is useful for finding a stuck button, incorrect wiring, or a short without opening an SSH terminal.</p>
+        <div class="input-summary">
+          <article><span>Active now</span><strong id="input-active">Waiting…</strong></article>
+          <article><span>Last activated</span><strong id="input-last">None yet</strong></article>
+          <article><span>Detected wiring</span><strong id="input-polarity">Waiting…</strong></article>
+        </div>
+        <div id="input-debug-warning" class="input-debug-warning" hidden></div>
+        <div id="input-debug-list" class="input-debug-list" aria-live="polite"></div>
+        <div class="input-debug-actions">
+          <button id="input-live-button" class="secondary-button" type="button">Pause live view</button>
+          <button id="input-refresh-button" class="quiet-button" type="button">Refresh now</button>
+        </div>
+        <small id="input-debug-updated">Waiting for the first Bluetooth reading…</small>
+      </section>
+
       <section id="volume-panel" class="panel volume-panel" hidden>
         <div class="panel-heading">
           <div>

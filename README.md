@@ -69,12 +69,16 @@ local gateway page closes the temporary hotspot, lets the phone return to its no
 internet connection, and redirects to `https://radio.jorda.co.za/`. Wi-Fi details are
 then configured over Bluetooth from the published RadioLink page.
 
-ESP32 firmware 0.2.0 and newer advertises optional playback capabilities. For those
-radios the dashboard shows a playback panel that can force one of the ten dial
-positions, force silence, return to the physical dial, or play a short test chime.
-A forced selection remains active until the physical dial moves to a different
-position. Radios that do not advertise these capabilities—including existing
-Raspberry Pi installations—never show the panel and receive no new commands.
+Compatible ESP32 firmware and current Raspberry Pi backends advertise optional
+playback capabilities. The dashboard can force one of the ten dial positions, force
+silence, or return to the physical controls. A forced selection remains active until
+a physical input activates. ESP32 radios can additionally advertise a test chime.
+
+Current Raspberry Pi backends also advertise GPIO diagnostics. A live panel shows
+the raw HIGH/LOW level of all ten inputs, the currently active input, and the last
+input activated, making stuck buttons, bridged switches, and wiring shorts visible
+over Bluetooth. Older radios remain compatible: optional panels stay hidden unless
+the backend explicitly advertises them.
 
 ## If Bluetooth permission is blocked
 
